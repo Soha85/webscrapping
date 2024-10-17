@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Article Scraper</title>
+</head>
+<body>
+<table width="100%">
+    <tr>
+        <td width="50%"> <h1>Select a Website to Scrape Articles</h1>
+    <form method="POST" action="/get_articles">
+        <label for="website">Choose a website:</label>
+        <select id="website" name="website">
+            <option value="https://www.bbc.com/travel">https://www.bbc.com/travel</option>
+            <option value="https://www.bbc.com/culture">https://www.bbc.com/culture</option>
+        </select>
+        <button type="submit">Get Articles</button>
+    </form>
+
+
+        </td>
+        <td width="50%"> <!-- Question form -->
+    <h2>Ask a Question:</h2>
+    <form method="POST" action="/ask_question">
+        <label for="question">Enter your question:</label><br>
+        <textarea name="question" id="question" cols="40" rows="5"></textarea>
+        <button type="submit">Submit Question</button>
+    </form>
+
+ </td>
+    </tr>
+    <tr>
+        <td> <!-- Display the scraped articles -->
+    {% if articles %}
+        <h2>Articles:</h2>
+        <ul>
+            {% for article in articles %}
+                <li>{{ article }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}</td><td>   <!-- Display the answer if present -->
+    {% if answer %}
+        <p>Answer: {{ answer }}</p>
+    {% endif %}</td>
+    </tr>
+</table>
+
+
+
+</body>
+</html>
