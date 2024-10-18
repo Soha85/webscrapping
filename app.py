@@ -7,6 +7,7 @@ import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+st.session_state.articles_df = RAG.articles
 
 # Function to scrape article URLs from a website
 def scrape_articles(site_url):
@@ -45,6 +46,9 @@ selected_website = st.selectbox("Select a website to scrape", ['https://www.bbc.
 # **Initialize previous_website in session state**
 if "previous_website" not in st.session_state:
     st.session_state.previous_website = None
+# Session state for storing scraped data
+if "articles_df" not in st.session_state:
+    st.session_state.articles_df = pd.DataFrame(columns=["title", "content"])
 
 # Button to get articles
 if st.button('Get Articles'):
@@ -85,7 +89,8 @@ if st.button('Get Articles'):
         st.error(f"Failed to fetch articles: {e}")
 
 # Display articles in a table (if any)
-if not st.session_state.articles_df.empty:
+# Session state for storing scraped data
+if not st.session_state.articles_df.empty and "articles_df" in st.session_state:
     st.write(st.session_state.articles_df)
 else:
     st.info("No articles scraped yet.")
