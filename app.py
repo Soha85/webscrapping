@@ -71,7 +71,7 @@ if st.button('Get Articles'):
         if articles:
             # Display articles in a table
             RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
-            st.write(RAG.articles)
+            #st.write(RAG.articles)
         else:
             st.warning('No articles found.')
 
@@ -111,3 +111,11 @@ if st.button('Ask Question'):
         st.write(f"Answer: {response}")
     else:
         st.error("No articles available for processing.")
+
+
+# Clear controls when selected website changes
+if selected_website != st.session_state.previous_website:
+    st.session_state.previous_website = selected_website
+    question = ""
+    answer_placeholder.empty()
+    st.session_state.articles_df = RAG.articles.empty
