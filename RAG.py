@@ -107,19 +107,19 @@ class RAG:
         top_k_idx = np.argsort(similarities[0])[-top_k:][::-1]
         return [self.corpus_chunks[i] for i in top_k_idx], similarities[0][top_k_idx]
 
-    def retrieve_documents_faiss(self,query, faiss_index, chunked_texts, k=1):
+    def retrieve_documents_faiss(self,query, k=1):
         query_embedding = self.get_embeddings(query)
-        distances, indices = faiss_index.search(query_embedding, k)
+        distances, indices = self.faiss_index.search(query_embedding, k)
 
         results = []
         for i, idx in enumerate(indices[0]):
-            document = chunked_texts[idx]
+            document = self.chunked_texts[idx]
             score = distances[0][i]
             results.append((document, score))
 
         return results
     def rag_generate_text(self,query,llm):
-        retrieved_docs, _ = self.retrieve_documents(query)
+        retrieved_docs, _ = self.retrieve_documents_faiss(query,1)
         if not retrieved_docs:
             return "No relevant documents found."
         context = " ".join(retrieved_docs)
@@ -127,7 +127,7 @@ class RAG:
         return str(generated[0]['generated_text'].split("Answer:")[1].strip())
 
     def rag_get_answer(self,query,llm):
-        retrieved_docs, _ = self.retrieve_documents(query)
+        retrieved_docs, _ = self.retrieve_documents_faiss(query,1)
         if not retrieved_docs:
             return "No relevant documents found."
         context = " ".join(retrieved_docs)
