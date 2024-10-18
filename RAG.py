@@ -37,31 +37,7 @@ class RAG:
         self.chunk_embeddings = np.vstack(self.chunk_embeddings)
         return "Chunking & Embedding Done"
 
-    def generate_text(self,query):
-        TG = pipeline('text-generation', model='gpt2', batch_size=128)
-        TG.model.config.pad_token_id = TG.model.config.eos_token_id
-        return self.rag_generate_text(query,TG)
-
-    def get_answer(self,query):
-        QA = pipeline('question-answering', model='distilbert-base-cased-distilled-squad')
-        QA.model.config.pad_token_id = QA.model.config.eos_token_id
-        return self.rag_get_answer(query,QA)
-
-    def preprocess_text(self,text):
-        text = text.lower()  # Convert to lowercase
-        text = text.replace('\\n', '')
-        text = re.sub(r'\s+', ' ', text)  # Remove extra spaces
-        # text = re.sub(r'[^a-zA-Z\s]', '', text)  # Remove special characters and digits
-        return text.strip()
-
-    def create_faiss_index(self,embedding_dim):
-        index = faiss.IndexFlatL2(embedding_dim)  # L2 distance for similarity search
-        return index
-
     def save_embeddings_to_faiss(self):
-        self.chunk_embeddings = []
-        self.corpus_chunks = []
-
         # Process each question-context pair
         for question, context in zip(self.articles["title"],self.articles["content"]):
             # Combine question and context (as one block of text)
@@ -81,8 +57,21 @@ class RAG:
 
         # Add embeddings to FAISS index
         self.faiss_index.add(self.chunk_embeddings)
-
         return "Chunking & Embedding Done"
+
+
+    def preprocess_text(self,text):
+        text = text.lower()  # Convert to lowercase
+        text = text.replace('\\n', '')
+        text = re.sub(r'\s+', ' ', text)  # Remove extra spaces
+        # text = re.sub(r'[^a-zA-Z\s]', '', text)  # Remove special characters and digits
+        return text.strip()
+
+    def create_faiss_index(self,embedding_dim):
+        index = faiss.IndexFlatL2(embedding_dim)  # L2 distance for similarity search
+        return index
+
+
 
 
     # Chunking: Split long documents into smaller chunks
@@ -111,11 +100,22 @@ class RAG:
         query_embedding = self.get_embeddings(query)
         distances, indices = self.faiss_index.search(query_embedding, k)
         results = []
+        print(indices)
         for i, idx in enumerate(indices[0]):
             document = self.corpus_chunks[idx]
             score = distances[0][i]
             results.append((document, score))
         return results
+
+    def generate_text(self,query):
+        TG = pipeline('text-generation', model='gpt2', batch_size=128)
+        TG.model.config.pad_token_id = TG.model.config.eos_token_id
+        return self.rag_generate_text(query,TG)
+
+    def get_answer(self,query):
+        QA = pipeline('question-answering', model='distilbert-base-cased-distilled-squad')
+        QA.model.config.pad_token_id = QA.model.config.eos_token_id
+        return self.rag_get_answer(query,QA)
 
     def rag_generate_text(self,query,llm):
         retrieved_docs, _ = self.retrieve_documents_faiss(query,1)
