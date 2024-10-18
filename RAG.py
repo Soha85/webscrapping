@@ -122,7 +122,7 @@ class RAG:
         retrieved_docs,_ = self.retrieve_documents_faiss(query,1)
         if not retrieved_docs:
             return "No relevant documents found."
-        context = " ".join(retrieved_docs)
+        context =  ' '.join([doc for doc, score in retrieved_docs])
         generated = llm(f"Query: {query}\nContext: {context}\nAnswer:", max_new_tokens=200, num_return_sequences=1)
         return str(generated[0]['generated_text'].split("Answer:")[1].strip())
 
@@ -130,7 +130,7 @@ class RAG:
         retrieved_docs,_ = self.retrieve_documents_faiss(query,1)
         if not retrieved_docs:
             return "No relevant documents found."
-        context = " ".join(retrieved_docs)
+        context =  ' '.join([doc for doc, score in retrieved_docs])
         generated = llm(question=query,context=context)
         return generated
 
