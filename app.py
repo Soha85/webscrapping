@@ -36,6 +36,10 @@ def scrape_articles(site_url):
 # Streamlit UI
 st.title("Web Article Scraper")
 
+# Session state for storing scraped data
+if "articles_df" not in st.session_state:
+    st.session_state.articles_df = pd.DataFrame(columns=["title", "content"])
+
 # Dropdown to select website
 selected_website = st.selectbox("Select a website to scrape", ['https://www.bbc.com/travel', 'https://www.bbc.com/culture'])
 
@@ -64,23 +68,39 @@ if st.button('Get Articles'):
                 titles.append(title)
                 articles.append(content)
 
-        if articles:
-            # Display articles in a table
-            RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
-            st.write(RAG.articles)
-        else:
-            st.warning('No articles found.')
+        st.session_state.articles_df = pd.DataFrame({'title': titles, 'content': articles})
+        st.success("Articles successfully scraped!")
 
     except requests.exceptions.RequestException as e:
         st.error(f"Failed to fetch articles: {e}")
 
+# Display articles in a table (if any)
+if not st.session_state.articles_df.empty:
+    st.write(st.session_state.articles_df)
+else:
+    st.info("No articles scraped yet.")
+
 # Input for user question
 question = st.text_input("Ask a question:")
 
+# Placeholder for answer while processing
+answer_placeholder = st.empty()
+
 # Button to send the question for processing
 if st.button('Ask Question'):
-    if not RAG.articles.empty:
-        response = RAG().prepare_data(question)
+    if not st.session_state.articles_df.empty:
+        # Show "Processing..." message
+        answer_placeholder.write("**Processing your question...**")
+
+        # Simulate processing time (replace with your actual RAG.prepare_data call)
+        import time
+
+        time.sleep(2)  # Simulate processing time
+
+        # Replace with your actual RAG processing logic
+        response = "Answer retrieved from RAG (replace with actual logic)"
+
+        answer_placeholder.empty()  # Clear placeholder
         st.write(f"Answer: {response}")
     else:
-        st.error("No embedded data available for processing.")
+        st.error("No articles available for processing.")
