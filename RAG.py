@@ -99,14 +99,14 @@ class RAG:
     def retrieve_documents_faiss(self,query, k=1):
         query_embedding = self.get_embeddings(query)
         distances, indices = self.faiss_index.search(query_embedding, k)
-        results = []
-        print(indices)
-        print(self.faiss_index)
-        for i, idx in enumerate(indices[0]):
-            document = self.corpus_chunks[idx]
-            score = distances[0][i]
-            results.append((document, score))
-        return results,distances
+        #results = []
+        #for i, idx in enumerate(indices[0]):
+            #document = self.corpus_chunks[idx]
+            #score = distances[0][i]
+            #results.append((document, score))
+        return [self.corpus_chunks[idx] for i,idx in enumerate(indices[0])], distances
+        #return results,distances
+
 
     def generate_text(self,query):
         TG = pipeline('text-generation', model='gpt2', batch_size=128)
