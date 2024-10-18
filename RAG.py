@@ -110,14 +110,13 @@ class RAG:
     def retrieve_documents_faiss(self,query, k=1):
         query_embedding = self.get_embeddings(query)
         distances, indices = self.faiss_index.search(query_embedding, k)
-
         results = []
         for i, idx in enumerate(indices[0]):
             document = self.corpus_chunks[idx]
             score = distances[0][i]
             results.append((document, score))
-
         return results
+
     def rag_generate_text(self,query,llm):
         retrieved_docs, _ = self.retrieve_documents_faiss(query,1)
         if not retrieved_docs:
