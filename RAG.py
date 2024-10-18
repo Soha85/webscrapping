@@ -101,11 +101,12 @@ class RAG:
         distances, indices = self.faiss_index.search(query_embedding, k)
         results = []
         print(indices)
+        print(self.faiss_index)
         for i, idx in enumerate(indices[0]):
             document = self.corpus_chunks[idx]
             score = distances[0][i]
             results.append((document, score))
-        return results
+        return results,distances
 
     def generate_text(self,query):
         TG = pipeline('text-generation', model='gpt2', batch_size=128)
@@ -118,7 +119,7 @@ class RAG:
         return self.rag_get_answer(query,QA)
 
     def rag_generate_text(self,query,llm):
-        retrieved_docs = self.retrieve_documents_faiss(query,1)
+        retrieved_docs,_ = self.retrieve_documents_faiss(query,1)
         if not retrieved_docs:
             return "No relevant documents found."
         context = " ".join(retrieved_docs)
@@ -126,7 +127,7 @@ class RAG:
         return str(generated[0]['generated_text'].split("Answer:")[1].strip())
 
     def rag_get_answer(self,query,llm):
-        retrieved_docs, _ = self.retrieve_documents_faiss(query,1)
+        retrieved_docs,_ = self.retrieve_documents_faiss(query,1)
         if not retrieved_docs:
             return "No relevant documents found."
         context = " ".join(retrieved_docs)

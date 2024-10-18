@@ -34,12 +34,8 @@ def scrape_articles(site_url):
 # Streamlit UI
 st.title("Web Article Scraper")
 
-
-
 # Dropdown to select website
 selected_website = st.selectbox("Select a website to scrape", ['https://www.bbc.com/travel', 'https://www.bbc.com/culture'])
-
-
 
 # Button to get articles
 if st.button('Get Articles'):
@@ -69,13 +65,12 @@ if st.button('Get Articles'):
         if articles:
             # Display articles in a table
             RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
-            #st.write(RAG.articles)
+            st.write(RAG.articles)
         else:
             st.warning('No articles found.')
 
         st.session_state.articles_df = RAG.articles
         st.success("Articles successfully scraped!")
-
     except requests.exceptions.RequestException as e:
         st.error(f"Failed to fetch articles: {e}")
 
@@ -104,16 +99,9 @@ if st.button('Ask Question'):
         st.error("No articles available for processing.")
 
 
-# Display articles in a table (if any)
-# Session state for storing scraped data
-if not st.session_state.articles_df.empty and "articles_df" in st.session_state:
-    st.write(st.session_state.articles_df)
-else:
-    st.info("No articles scraped yet.")
 
-# Session state for storing scraped data
-if "articles_df" not in st.session_state:
-    st.session_state.articles_df = pd.DataFrame(columns=["title", "content"])
+
+
 # **Initialize previous_website in session state**
 if "previous_website" not in st.session_state:
     st.session_state.previous_website = None
@@ -122,4 +110,4 @@ if selected_website != st.session_state.previous_website:
     st.session_state.previous_website = selected_website
     question = ""
     answer_placeholder.empty()
-    st.session_state.articles_df = RAG.articles.empty
+    st.session_state.articles_df = RAG.articles
