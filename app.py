@@ -100,7 +100,7 @@ if st.button('Ask Question'):
         time.sleep(2)  # Simulate processing time
 
         # Replace with your actual RAG processing logic
-        st.write(RAG().save_embeddings_to_faiss())
+        st.write(RAG().prepare_data())
         response = RAG().get_answer(question)
         answer_placeholder.empty()  # Clear placeholder
         st.write(f"Answer: {response}")

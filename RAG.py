@@ -25,9 +25,12 @@ class RAG:
 
 
     def prepare_data(self):
-        for index, doc in self.articles.iterrows():
+        for question, context in zip(self.articles["title"], self.articles["content"]):
+            # Combine question and context (as one block of text)
+            combined_text = question + " " + context
+            preprocessed_text = self.preprocess_text(combined_text)
             # Split the document into chunks
-            chunks = self.chunk_text(doc['cleaned_text'], chunk_size=50)
+            chunks = self.chunk_text(preprocessed_text, chunk_size=50)
             self.corpus_chunks.extend(chunks)  # Add chunks to the corpus
             # Get embeddings for each chunk
             embeddings = [self.get_embeddings(chunk) for chunk in chunks]
@@ -129,7 +132,7 @@ class RAG:
         return str(generated[0]['generated_text'].split("Answer:")[1].strip())
 
     def rag_get_answer(self,query,llm):
-        retrieved_docs,_ = self.retrieve_documents_faiss(query,1)
+        retrieved_docs,_ = self.retrieve_documents(query,1)
 
         print(len(retrieved_docs))
         if not retrieved_docs:
