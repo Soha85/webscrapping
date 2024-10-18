@@ -132,5 +132,5 @@ class RAG:
             return "No relevant documents found."
         context = " ".join(retrieved_docs)
         generated = llm(question=query,context=context)
-        return generated['answer']
+        return generated
 
