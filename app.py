@@ -68,7 +68,14 @@ if st.button('Get Articles'):
                 titles.append(title)
                 articles.append(content)
 
-        st.session_state.articles_df = pd.DataFrame({'title': titles, 'content': articles})
+        if articles:
+            # Display articles in a table
+            RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
+            st.write(RAG.articles)
+        else:
+            st.warning('No articles found.')
+
+        st.session_state.articles_df = RAG.articles
         st.success("Articles successfully scraped!")
 
     except requests.exceptions.RequestException as e:
