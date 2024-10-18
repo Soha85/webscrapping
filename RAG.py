@@ -59,7 +59,6 @@ class RAG:
 
         # Add embeddings to FAISS index
         self.faiss_index.add(self.chunk_embeddings)
-        print(len(self.faiss_index))
         return "Chunking & Embedding Done"
 
 
@@ -131,7 +130,7 @@ class RAG:
 
     def rag_get_answer(self,query,llm):
         retrieved_docs,_ = self.retrieve_documents_faiss(query,1)
-        print(len(self.faiss_index))
+
         print(len(retrieved_docs))
         if not retrieved_docs:
             return "No relevant documents found."
