@@ -113,7 +113,7 @@ class RAG:
 
         results = []
         for i, idx in enumerate(indices[0]):
-            document = self.chunked_texts[idx]
+            document = self.corpus_chunks[idx]
             score = distances[0][i]
             results.append((document, score))
 
