@@ -16,11 +16,11 @@ class RAG:
     articles = pd.DataFrame([])
     corpus_chunks = []
     chunk_embeddings = []
-    faiss_index = 0
+    faiss_index =
     def __init__(self):
         self.articles['content'] = [row['title'] + " " + row['content'] for x, row in self.articles.iterrows()]
         self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['content']]
-        faiss_index = self.create_faiss_index(embedding_dim)
+        self.faiss_index = self.create_faiss_index(embedding_dim)
 
 
 
