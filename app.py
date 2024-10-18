@@ -1,15 +1,12 @@
+import streamlit as st
 import logging
-from flask import Flask, render_template, request
 import requests
 from bs4 import BeautifulSoup
 from RAG import RAG
-import numpy as np
 import pandas as pd
 
-app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 # Function to scrape article URLs from a website
 def scrape_articles(site_url):
@@ -17,6 +14,7 @@ def scrape_articles(site_url):
         response = requests.get(site_url, timeout=10)  # Add a timeout for safety
         response.raise_for_status()  # Raises HTTPError for bad responses (4xx and 5xx)
     except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching the article: {e}")
         return None, f"Error fetching the article: {e}"
 
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -35,18 +33,17 @@ def scrape_articles(site_url):
     full_text = ' '.join(all_paragraphs)
     return title, full_text.strip()
 
+# Streamlit UI
+st.title("Web Article Scraper")
 
+# Dropdown to select website
+selected_website = st.selectbox("Select a website to scrape", ['https://www.bbc.com/travel', 'https://www.bbc.com/culture'])
 
-# Route to render the main page with dropdown and article list
-@app.route('/')
-def index():
-    return render_template('index.html', articles=[])
-
-# Route to handle website selection and scrape article URLs
-@app.route('/get_articles', methods=['POST'])
-def get_articles():
-    selected_website = request.form['website']
-    article_links, titles, articles = [], [], []
+# Button to get articles
+if st.button('Get Articles'):
+    article_links = []
+    titles = []
+    articles = []
 
     try:
         response = requests.get(selected_website, timeout=10)
@@ -67,29 +64,23 @@ def get_articles():
                 titles.append(title)
                 articles.append(content)
 
-        RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
+        if articles:
+            # Display articles in a table
+            RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
+            st.write(RAG.articles)
+        else:
+            st.warning('No articles found.')
 
     except requests.exceptions.RequestException as e:
-        return render_template('index.html', error=f"Failed to fetch articles: {e}", articles=[])
+        st.error(f"Failed to fetch articles: {e}")
 
-    return render_template('index.html', articles=titles)
+# Input for user question
+question = st.text_input("Ask a question:")
 
-
-# Route to handle user question and send it to the Python script for processing
-
-@app.route('/ask_question', methods=['POST'])
-def ask_question():
-    question = request.form['question']
-    response = "No Embedded Data"
-
+# Button to send the question for processing
+if st.button('Ask Question'):
     if not RAG.articles.empty:
         response = RAG().prepare_data(question)
+        st.write(f"Answer: {response}")
     else:
-        logger.error("No embedded data available for processing.")
-
-    return render_template('index.html', answer=response)
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001,debug=False, threaded=True)
-
+        st.error("No embedded data available for processing.")
