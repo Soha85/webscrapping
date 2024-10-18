@@ -97,7 +97,6 @@ else:
 
 # Input for user question
 question = st.text_input("Ask a question:")
-st.button("Generate Text About")
 
 # Placeholder for answer while processing
 answer_placeholder = st.empty()
