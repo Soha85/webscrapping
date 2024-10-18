@@ -10,7 +10,7 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-articles =[ ]
+
 # Function to scrape article URLs from a website
 def scrape_articles(site_url):
     try:
@@ -43,7 +43,6 @@ def index():
     return render_template('index.html', articles=[])
 
 # Route to handle website selection and scrape article URLs
-@app.route('/get_articles', methods=['POST'])
 @app.route('/get_articles', methods=['POST'])
 def get_articles():
     selected_website = request.form['website']
