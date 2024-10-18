@@ -118,7 +118,7 @@ class RAG:
         return self.rag_get_answer(query,QA)
 
     def rag_generate_text(self,query,llm):
-        retrieved_docs, _ = self.retrieve_documents_faiss(query,1)
+        retrieved_docs = self.retrieve_documents_faiss(query,1)
         if not retrieved_docs:
             return "No relevant documents found."
         context = " ".join(retrieved_docs)

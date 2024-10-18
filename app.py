@@ -118,22 +118,7 @@ if st.button('Ask Question'):
     else:
         st.error("No articles available for processing.")
 
-if st.button('Generate Text About'):
-    if not st.session_state.articles_df.empty:
-        # Show "Processing..." message
-        answer_placeholder.write("**Processing your question...**")
 
-        # Simulate processing time (replace with your actual RAG.prepare_data call)
-        time.sleep(2)  # Simulate processing time
-
-        # Replace with your actual RAG processing logic
-        st.write(RAG().save_embeddings_to_faiss())
-
-        response = RAG().generate_text(question)
-        answer_placeholder.empty()  # Clear placeholder
-        st.write(f"Answer: {response}")
-    else:
-        st.error("No articles available for processing.")
 
 
 # Clear controls when selected website changes
