@@ -111,7 +111,7 @@ if st.button('Ask Question'):
         time.sleep(2)  # Simulate processing time
 
         # Replace with your actual RAG processing logic
-        answer_placeholder.write(RAG().prepare_data())
+        answer_placeholder.write(RAG().save_embeddings_to_faiss())
         response = RAG().get_answer(question)
         answer_placeholder.empty()  # Clear placeholder
         st.write(f"Answer: {response}")
@@ -127,7 +127,7 @@ if st.button('Generate Text About'):
         time.sleep(2)  # Simulate processing time
 
         # Replace with your actual RAG processing logic
-        answer_placeholder.write(RAG().prepare_data())
+        answer_placeholder.write(RAG().save_embeddings_to_faiss())
         response = RAG().generate_text(question)
         answer_placeholder.empty()  # Clear placeholder
         st.write(f"Answer: {response}")

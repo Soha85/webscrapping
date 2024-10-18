@@ -1,3 +1,4 @@
+import faiss
 import re
 import warnings
 import pandas as pd
@@ -8,15 +9,19 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 model = BertModel.from_pretrained('bert-base-uncased')
+embedding_dim = model.config.hidden_size
 
 
 class RAG:
     articles = pd.DataFrame([])
     corpus_chunks = []
     chunk_embeddings = []
+    faiss_index = 0
     def __init__(self):
         self.articles['content'] = [row['title'] + " " + row['content'] for x, row in self.articles.iterrows()]
         self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['content']]
+        faiss_index = self.create_faiss_index(embedding_dim)
+
 
 
     def prepare_data(self):
@@ -25,7 +30,7 @@ class RAG:
             chunks = self.chunk_text(doc['cleaned_text'], chunk_size=50)
             self.corpus_chunks.extend(chunks)  # Add chunks to the corpus
             # Get embeddings for each chunk
-            embeddings = [self.get_embedding(chunk) for chunk in chunks]
+            embeddings = [self.get_embeddings(chunk) for chunk in chunks]
             self.chunk_embeddings.extend(embeddings)
 
         # Convert chunk_embeddings to a NumPy array for efficient retrieval
@@ -49,27 +54,70 @@ class RAG:
         # text = re.sub(r'[^a-zA-Z\s]', '', text)  # Remove special characters and digits
         return text.strip()
 
+    def create_faiss_index(self,embedding_dim):
+        index = faiss.IndexFlatL2(embedding_dim)  # L2 distance for similarity search
+        return index
+
+    def save_embeddings_to_faiss(self):
+        self.chunk_embeddings = []
+        self.corpus_chunks = []
+
+        # Process each question-context pair
+        for question, context in zip(self.articles["title"],self.articles["content"]):
+            # Combine question and context (as one block of text)
+            combined_text = question + " " + context
+            preprocessed_text = self.preprocess_text(combined_text)
+
+            # Chunk the combined text (if necessary) and generate embeddings
+            chunks = self.chunk_text(preprocessed_text)
+            self.corpus_chunks.extend(chunks)
+
+            for chunk in chunks:
+                embedding = self.get_embeddings(chunk)
+                self.chunk_embeddings.append(embedding)
+
+        # Convert embeddings to NumPy array (FAISS requires float32 arrays)
+        self.chunk_embeddings = np.vstack(self.chunk_embeddings).astype('float32')
+
+        # Add embeddings to FAISS index
+        self.faiss_index.add(self.chunk_embeddings)
+
+        return "Chunking & Embedding Done"
+
+
     # Chunking: Split long documents into smaller chunks
     def chunk_text(self,text, chunk_size=50):
         words = text.split()
         # Create chunks of approximately chunk_size words
         return [' '.join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
 
-    # Generate embeddings using BERT
-    def get_embedding(self,text):
-        inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
-        outputs = model(**inputs)
-        # Use the [CLS] token's embedding for the entire sentence
-        return outputs.last_hidden_state[:, 0, :].detach().numpy()
+
+
+    def get_embeddings(self,text):
+        inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
+        with torch.no_grad():
+            outputs = model(**inputs)
+        return outputs.last_hidden_state[:, 0, :].numpy()
 
     def retrieve_documents(self,query, top_k=1):
-        query_embedding = self.get_embedding(query)
+        query_embedding = self.get_embeddings(query)
         # Compute cosine similarities
         similarities = cosine_similarity(query_embedding, self.chunk_embeddings)
         # Get top_k similar chunks
         top_k_idx = np.argsort(similarities[0])[-top_k:][::-1]
         return [self.corpus_chunks[i] for i in top_k_idx], similarities[0][top_k_idx]
 
+    def retrieve_documents_faiss(self,query, faiss_index, chunked_texts, k=1):
+        query_embedding = self.get_embeddings(query)
+        distances, indices = faiss_index.search(query_embedding, k)
+
+        results = []
+        for i, idx in enumerate(indices[0]):
+            document = chunked_texts[idx]
+            score = distances[0][i]
+            results.append((document, score))
+
+        return results
     def rag_generate_text(self,query,llm):
         retrieved_docs, _ = self.retrieve_documents(query)
         if not retrieved_docs:
