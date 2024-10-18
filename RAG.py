@@ -8,32 +8,39 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 model = BertModel.from_pretrained('bert-base-uncased')
-llm = pipeline('text-generation', model='gpt2', batch_size=128)
-llm.model.config.pad_token_id = llm.model.config.eos_token_id
+
 
 class RAG:
     articles = pd.DataFrame([])
+    corpus_chunks = []
+    chunk_embeddings = []
     def __init__(self):
         self.articles['content'] = [row['title'] + " " + row['content'] for x, row in self.articles.iterrows()]
         self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['content']]
 
 
-    def prepare_data(self,query):
-        corpus_chunks = []
-        chunk_embeddings = []
-
+    def prepare_data(self):
         for index, doc in self.articles.iterrows():
             # Split the document into chunks
             chunks = self.chunk_text(doc['cleaned_text'], chunk_size=50)
-            corpus_chunks.extend(chunks)  # Add chunks to the corpus
+            self.corpus_chunks.extend(chunks)  # Add chunks to the corpus
             # Get embeddings for each chunk
             embeddings = [self.get_embedding(chunk) for chunk in chunks]
-            chunk_embeddings.extend(embeddings)
+            self.chunk_embeddings.extend(embeddings)
 
         # Convert chunk_embeddings to a NumPy array for efficient retrieval
-        chunk_embeddings = np.vstack(chunk_embeddings)
+        self.chunk_embeddings = np.vstack(self.chunk_embeddings)
+        return "Chunking & Embedding Done"
 
-        return self.rag_generate_answer(query, corpus_chunks, chunk_embeddings)
+    def generate_text(self,query):
+        TG = pipeline('text-generation', model='gpt2', batch_size=128)
+        TG.model.config.pad_token_id = TG.model.config.eos_token_id
+        return self.rag_generate_text(query,TG)
+
+    def get_answer(self,query):
+        QA = pipeline('Question-answering', model='gpt2')
+        QA.model.config.pad_token_id = QA.model.config.eos_token_id
+        return self.rag_get_answer(query,QA)
 
     def preprocess_text(self,text):
         text = text.lower()  # Convert to lowercase
@@ -55,17 +62,17 @@ class RAG:
         # Use the [CLS] token's embedding for the entire sentence
         return outputs.last_hidden_state[:, 0, :].detach().numpy()
 
-    def retrieve_documents(self,query, corpus_chunks, chunk_embeddings, top_k=1):
+    def retrieve_documents(self,query, top_k=1):
         query_embedding = self.get_embedding(query)
         # Compute cosine similarities
-        similarities = cosine_similarity(query_embedding, chunk_embeddings)
+        similarities = cosine_similarity(query_embedding, self.chunk_embeddings)
         # Get top_k similar chunks
         top_k_idx = np.argsort(similarities[0])[-top_k:][::-1]
-        return [corpus_chunks[i] for i in top_k_idx], similarities[0][top_k_idx]
+        return [self.corpus_chunks[i] for i in top_k_idx], similarities[0][top_k_idx]
 
-    def rag_generate_answer(self,query, corpus_chunks, chunk_embeddings):
+    def rag_generate_text(self,query,llm):
         # Retrieve relevant chunks
-        retrieved_docs, scores = self.retrieve_documents(query, corpus_chunks, chunk_embeddings)
+        retrieved_docs, scores = self.retrieve_documents(query)
         # print(f"Retrieved Chunks: {retrieved_docs} with scores {scores}\n")
 
         # Combine reformulated query with retrieved chunks
@@ -74,6 +81,20 @@ class RAG:
         # Generate a response using the LLM with the combined input
         # Set max_new_tokens to control the length of the generated part
         generated = llm(f"Query: {query}\nContext: {context}\nAnswer:", max_new_tokens=200, num_return_sequences=1)
+
+        return str(generated[0]['generated_text'].split("Answer:")[1].strip())
+
+    def rag_get_answer(self,query,llm):
+        # Retrieve relevant chunks
+        retrieved_docs, scores = self.retrieve_documents(query)
+        # print(f"Retrieved Chunks: {retrieved_docs} with scores {scores}\n")
+
+        # Combine reformulated query with retrieved chunks
+        context = " ".join(retrieved_docs)
+
+        # Generate a response using the LLM with the combined input
+        # Set max_new_tokens to control the length of the generated part
+        generated = llm(question=query,context=context)
 
         return str(generated[0]['generated_text'].split("Answer:")[1].strip())
 
