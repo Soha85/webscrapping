@@ -38,7 +38,7 @@ class RAG:
         return self.rag_generate_text(query,TG)
 
     def get_answer(self,query):
-        QA = pipeline('question-answering', model='gpt2')
+        QA = pipeline('question-answering', model='distilbert-base-cased-distilled-squad')
         QA.model.config.pad_token_id = QA.model.config.eos_token_id
         return self.rag_get_answer(query,QA)
 
@@ -71,30 +71,18 @@ class RAG:
         return [self.corpus_chunks[i] for i in top_k_idx], similarities[0][top_k_idx]
 
     def rag_generate_text(self,query,llm):
-        # Retrieve relevant chunks
-        retrieved_docs, scores = self.retrieve_documents(query)
-        # print(f"Retrieved Chunks: {retrieved_docs} with scores {scores}\n")
-
-        # Combine reformulated query with retrieved chunks
+        retrieved_docs, _ = self.retrieve_documents(query)
+        if not retrieved_docs:
+            return "No relevant documents found."
         context = " ".join(retrieved_docs)
-
-        # Generate a response using the LLM with the combined input
-        # Set max_new_tokens to control the length of the generated part
         generated = llm(f"Query: {query}\nContext: {context}\nAnswer:", max_new_tokens=200, num_return_sequences=1)
-
         return str(generated[0]['generated_text'].split("Answer:")[1].strip())
 
     def rag_get_answer(self,query,llm):
-        # Retrieve relevant chunks
-        retrieved_docs, scores = self.retrieve_documents(query)
-        # print(f"Retrieved Chunks: {retrieved_docs} with scores {scores}\n")
-
-        # Combine reformulated query with retrieved chunks
+        retrieved_docs, _ = self.retrieve_documents(query)
+        if not retrieved_docs:
+            return "No relevant documents found."
         context = " ".join(retrieved_docs)
-
-        # Generate a response using the LLM with the combined input
-        # Set max_new_tokens to control the length of the generated part
         generated = llm(question=query,context=context)
-
-        return str(generated[0]['generated_text'].split("Answer:")[1].strip())
+        return generated['answer']
 
