@@ -65,15 +65,18 @@ if st.button('Get Articles'):
         if articles:
             # Display articles in a table
             RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
-            st.write(RAG.articles)
-        else:
-            st.warning('No articles found.')
+
 
         st.session_state.articles_df = RAG.articles
         st.success("Articles successfully scraped!")
     except requests.exceptions.RequestException as e:
         st.error(f"Failed to fetch articles: {e}")
 
+# Display articles in a table (if any)
+if not st.session_state.articles_df.empty:
+    st.write(st.session_state.articles_df)
+else:
+    st.info("No articles scraped yet.")
 
 # Input for user question
 question = st.text_input("Ask a question:")
