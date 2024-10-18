@@ -38,7 +38,7 @@ class RAG:
         return self.rag_generate_text(query,TG)
 
     def get_answer(self,query):
-        QA = pipeline('Question-answering', model='gpt2')
+        QA = pipeline('question-answering', model='gpt2')
         QA.model.config.pad_token_id = QA.model.config.eos_token_id
         return self.rag_get_answer(query,QA)
 

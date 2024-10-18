@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from RAG import RAG
 import pandas as pd
-
+import time
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 st.session_state.articles_df = RAG.articles
@@ -108,8 +108,6 @@ if st.button('Ask Question'):
         answer_placeholder.write("**Processing your question...**")
 
         # Simulate processing time (replace with your actual RAG.prepare_data call)
-        import time
-
         time.sleep(2)  # Simulate processing time
 
         # Replace with your actual RAG processing logic
@@ -126,8 +124,6 @@ if st.button('Generate Text About'):
         answer_placeholder.write("**Processing your question...**")
 
         # Simulate processing time (replace with your actual RAG.prepare_data call)
-        import time
-
         time.sleep(2)  # Simulate processing time
 
         # Replace with your actual RAG processing logic
