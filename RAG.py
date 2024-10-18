@@ -2,6 +2,8 @@ import faiss
 import re
 import warnings
 import pandas as pd
+from docutils.nodes import document
+
 warnings.filterwarnings("ignore", category=UserWarning)
 from transformers import BertTokenizer, BertModel, pipeline
 import torch
@@ -9,7 +11,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 model = BertModel.from_pretrained('bert-base-uncased')
-embedding_dim = model.config.hidden_size
+
 
 
 class RAG:
@@ -20,8 +22,6 @@ class RAG:
     def __init__(self):
         self.articles['content'] = [row['title'] + " " + row['content'] for x, row in self.articles.iterrows()]
         self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['content']]
-        self.faiss_index = self.create_faiss_index(embedding_dim)
-
 
 
     def prepare_data(self):
@@ -38,6 +38,8 @@ class RAG:
         return "Chunking & Embedding Done"
 
     def save_embeddings_to_faiss(self):
+        embedding_dim = model.config.hidden_size
+        self.faiss_index = self.create_faiss_index(embedding_dim)
         # Process each question-context pair
         for question, context in zip(self.articles["title"],self.articles["content"]):
             # Combine question and context (as one block of text)
@@ -57,6 +59,7 @@ class RAG:
 
         # Add embeddings to FAISS index
         self.faiss_index.add(self.chunk_embeddings)
+        print(len(self.faiss_index))
         return "Chunking & Embedding Done"
 
 
@@ -103,6 +106,7 @@ class RAG:
         for i, idx in enumerate(indices[0]):
             results.append(self.corpus_chunks[idx])
             scores.append(distances[0][i])
+        print(len(results))
         return results,scores
 
 
@@ -121,15 +125,17 @@ class RAG:
         retrieved_docs,_ = self.retrieve_documents_faiss(query,1)
         if not retrieved_docs:
             return "No relevant documents found."
-        context =  ' '.join([doc for doc, score in retrieved_docs])
+        context =  ' '.join(retrieved_docs)
         generated = llm(f"Query: {query}\nContext: {context}\nAnswer:", max_new_tokens=200, num_return_sequences=1)
         return str(generated[0]['generated_text'].split("Answer:")[1].strip())
 
     def rag_get_answer(self,query,llm):
         retrieved_docs,_ = self.retrieve_documents_faiss(query,1)
+        print(len(self.faiss_index))
+        print(len(retrieved_docs))
         if not retrieved_docs:
             return "No relevant documents found."
-        context =  ' '.join([doc for doc, score in retrieved_docs])
+        context =  ' '.join(retrieved_docs)
         generated = llm(question=query,context=context)
         return generated
 
