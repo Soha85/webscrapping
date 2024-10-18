@@ -19,13 +19,10 @@ def scrape_articles(site_url):
         return None, f"Error fetching the article: {e}"
 
     soup = BeautifulSoup(response.content, 'html.parser')
-
     # Extract text within the article (based on inspection)
     div_elements = soup.find_all('div', {'data-component': 'text-block'})
     all_paragraphs = []
-
     title = soup.title.get_text()
-
     for div in div_elements:
         paragraphs = div.find_all('p')
         for para in paragraphs:
@@ -37,18 +34,12 @@ def scrape_articles(site_url):
 # Streamlit UI
 st.title("Web Article Scraper")
 
-# Session state for storing scraped data
-if "articles_df" not in st.session_state:
-    st.session_state.articles_df = pd.DataFrame(columns=["title", "content"])
+
 
 # Dropdown to select website
 selected_website = st.selectbox("Select a website to scrape", ['https://www.bbc.com/travel', 'https://www.bbc.com/culture'])
-# **Initialize previous_website in session state**
-if "previous_website" not in st.session_state:
-    st.session_state.previous_website = None
-# Session state for storing scraped data
-if "articles_df" not in st.session_state:
-    st.session_state.articles_df = pd.DataFrame(columns=["title", "content"])
+
+
 
 # Button to get articles
 if st.button('Get Articles'):
@@ -88,12 +79,6 @@ if st.button('Get Articles'):
     except requests.exceptions.RequestException as e:
         st.error(f"Failed to fetch articles: {e}")
 
-# Display articles in a table (if any)
-# Session state for storing scraped data
-if not st.session_state.articles_df.empty and "articles_df" in st.session_state:
-    st.write(st.session_state.articles_df)
-else:
-    st.info("No articles scraped yet.")
 
 # Input for user question
 question = st.text_input("Ask a question:")
@@ -119,8 +104,19 @@ if st.button('Ask Question'):
         st.error("No articles available for processing.")
 
 
+# Display articles in a table (if any)
+# Session state for storing scraped data
+if not st.session_state.articles_df.empty and "articles_df" in st.session_state:
+    st.write(st.session_state.articles_df)
+else:
+    st.info("No articles scraped yet.")
 
-
+# Session state for storing scraped data
+if "articles_df" not in st.session_state:
+    st.session_state.articles_df = pd.DataFrame(columns=["title", "content"])
+# **Initialize previous_website in session state**
+if "previous_website" not in st.session_state:
+    st.session_state.previous_website = None
 # Clear controls when selected website changes
 if selected_website != st.session_state.previous_website:
     st.session_state.previous_website = selected_website
