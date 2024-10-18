@@ -16,7 +16,7 @@ class RAG:
     articles = pd.DataFrame([])
     corpus_chunks = []
     chunk_embeddings = []
-    faiss_index =
+    faiss_index = 0
     def __init__(self):
         self.articles['content'] = [row['title'] + " " + row['content'] for x, row in self.articles.iterrows()]
         self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['content']]
