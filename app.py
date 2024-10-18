@@ -98,7 +98,7 @@ if st.button('Ask Question'):
         time.sleep(2)  # Simulate processing time
 
         # Replace with your actual RAG processing logic
-        response = "Answer retrieved from RAG (replace with actual logic)"
+        response = RAG().prepare_data(question)
 
         answer_placeholder.empty()  # Clear placeholder
         st.write(f"Answer: {response}")
