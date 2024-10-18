@@ -42,6 +42,9 @@ if "articles_df" not in st.session_state:
 
 # Dropdown to select website
 selected_website = st.selectbox("Select a website to scrape", ['https://www.bbc.com/travel', 'https://www.bbc.com/culture'])
+# **Initialize previous_website in session state**
+if "previous_website" not in st.session_state:
+    st.session_state.previous_website = None
 
 # Button to get articles
 if st.button('Get Articles'):
