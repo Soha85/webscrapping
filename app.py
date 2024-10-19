@@ -108,6 +108,7 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
             response = RAG().rag_generate(question,' '.join(retrieved_docs), temperature)
+            st.write(' '.join(retrieved_docs))
             st.write(f"Cosine Retrieval:{response}")
 
         retrieved_docs, _ = RAG().retrieve_documents_faiss(question, num_answers)
