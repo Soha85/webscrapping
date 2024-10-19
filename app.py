@@ -86,9 +86,9 @@ else:
 
 # Input for user question
 question = st.text_input("Ask a question:")
-chunk_size = st.number_input("Chunk Size", min_value=10, max_value=500, value=50, step=10)
+chunk_size = st.number_input("Chunk Size", min_value=10, max_value=500, value=50, step=50)
 overlap = st.number_input("Overlap Size", min_value=10, max_value=500, value=50, step=10)
-num_answers = st.number_input("Number of Answers", min_value=1, max_value=5, value=3, step=1)
+num_answers = st.number_input("Number of Retrievals", min_value=1, max_value=5, value=3, step=1)
 temperature = st.slider("Temperature", min_value=0.0, max_value=1.5, value=0.7, step=0.1)
 
 
@@ -109,7 +109,7 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
             response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
-            st.write(f"Cosine Retrieval:{response}")
+            st.write(f"**Cosine Retrieval:**{response}")
 
         retrieved_docs, _ = rag_instance.retrieve_documents_faiss(question, num_answers)
         if not retrieved_docs:
@@ -117,7 +117,7 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
             response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
-            st.write(f"Faiss Retrieval:{response}")
+            st.write(f"**Faiss Retrieval:**{response}")
 
 
 
