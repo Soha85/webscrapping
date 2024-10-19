@@ -38,6 +38,7 @@ class RAG:
 
         # Convert chunk_embeddings to a NumPy array for efficient retrieval
         self.chunk_embeddings = np.vstack(self.chunk_embeddings)
+        print(self.chunk_embeddings.shape)
         # Add embeddings to FAISS index
         # Ensure faiss_index is initialized before adding embeddings
         if self.faiss_index is None:
