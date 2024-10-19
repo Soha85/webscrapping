@@ -40,7 +40,7 @@ class RAG:
         # Add embeddings to FAISS index
         # Ensure faiss_index is initialized before adding embeddings
         if self.faiss_index is None:
-            self.faiss_index = self.create_faiss_index(bert_model.config.hidden_size)
+            self.faiss_index = self.create_faiss_index(self.chunk_embeddings.shape[1])
         self.faiss_index.add(self.chunk_embeddings)
         # Save the FAISS index to a file
         faiss.write_index(self.faiss_index, "faiss_index.bin")
