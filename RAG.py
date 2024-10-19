@@ -25,11 +25,11 @@ class RAG:
         self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['all_content']]
 
 
-    def prepare_data(self):
+    def prepare_data(self,chunk_size ):
         for context in self.articles["all_content"]:
             # Combine question and context (as one block of text)
             # Split the document into chunks
-            chunks = self.chunk_text(context)
+            chunks = self.chunk_text(context,chunk_size)
             self.corpus_chunks.extend(chunks)  # Add chunks to the corpus
             # Get embeddings for each chunk
             embeddings = [self.get_embeddings(chunk) for chunk in chunks]
@@ -37,7 +37,7 @@ class RAG:
 
         # Convert chunk_embeddings to a NumPy array for efficient retrieval
         self.chunk_embeddings = np.vstack(self.chunk_embeddings)
-        return "Chunking & Embedding Done"
+        return "Chunking & Embedding Done and Working on Retrieving Now........"
 
     def save_embeddings_to_faiss(self):
         embedding_dim = model.config.hidden_size
@@ -73,7 +73,7 @@ class RAG:
         return index
 
     # Chunking: Split long documents into smaller chunks
-    def chunk_text(self,text, chunk_size=100, overlap=20):
+    def chunk_text(self,text, chunk_size, overlap=20):
         words = text.split()
         chunks = [' '.join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size - overlap)]
         return chunks
@@ -104,24 +104,24 @@ class RAG:
 
 
 
-    def generate_text(self,query,k=1):
+    def generate_text(self,query,k,temperature):
         TG = pipeline('text-generation', model='gpt2', batch_size=128)
         TG.model.config.pad_token_id = TG.model.config.eos_token_id
-        return self.rag_generate_text(query,TG,k)
+        return self.rag_generate_text(query,TG,k,temperature)
 
     def get_answer(self,query):
         QA = pipeline('question-answering', model='distilbert-base-cased-distilled-squad')
         QA.model.config.pad_token_id = QA.model.config.eos_token_id
         return self.rag_get_answer(query,QA)
 
-    def rag_generate_text(self,query,llm,k=1):
+    def rag_generate_text(self,query,llm,k,temperature):
         retrieved_docs,_ = self.retrieve_documents(query,k)
         if not retrieved_docs:
             return "No relevant documents found."
         context =  ' '.join(retrieved_docs)
         generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",
                         max_new_tokens=300,  # Limits the length of generated text
-                        temperature=0.8,  # Adds a bit of randomness but not too much
+                        temperature=temperature,  # Adds a bit of randomness but not too much
                         top_k=50,  # Only consider the top 50 tokens for each step
                         top_p=0.9,  # Nucleus sampling to ensure diversity while being focused
                         num_return_sequences=1,  # Generate only one response

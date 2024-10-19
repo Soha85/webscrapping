@@ -86,6 +86,9 @@ else:
 
 # Input for user question
 question = st.text_input("Ask a question:")
+chunk_size = st.number_input("Chunk Size", min_value=10, max_value=500, value=50, step=10)
+num_answers = st.number_input("Number of Answers", min_value=1, max_value=5, value=3, step=1)
+temperature = st.slider("Temperature", min_value=0.0, max_value=1.5, value=0.7, step=0.1)
 
 # Placeholder for answer while processing
 answer_placeholder = st.empty()
@@ -94,14 +97,14 @@ answer_placeholder = st.empty()
 if st.button('Ask Question'):
     if not st.session_state.articles_df.empty:
         # Show "Processing..." message
-        answer_placeholder.write("**Processing your question...**")
+        answer_placeholder.write("**Processing articles and do Emdeddings...**")
 
         # Simulate processing time (replace with your actual RAG.prepare_data call)
         time.sleep(2)  # Simulate processing time
 
         # Replace with your actual RAG processing logic
-        st.write(RAG().prepare_data())
-        response = RAG().generate_text(question,3)
+        st.write(RAG().prepare_data(chunk_size))
+        response = RAG().generate_text(question,num_answers,temperature)
         answers=[]
         answer_placeholder.empty()  # Clear placeholder
         if "Answer:" in response:
