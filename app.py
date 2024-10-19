@@ -9,8 +9,7 @@ import rouge
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 st.session_state.articles_df = RAG.articles
-articles_llm = pipeline(task='text-generation', model='gpt2')
-articles_llm.model.config.pad_token_id = articles_llm.model.config.eos_token_id
+
 
 def evaluate_rouge(answer,reference):
     if answer:
@@ -43,6 +42,8 @@ def scrape_articles(site_url):
 
 def rag_generate(query,context,temperature):
     try:
+        articles_llm = pipeline(task=selected_model, model='gpt2')
+        articles_llm.model.config.pad_token_id = articles_llm.model.config.eos_token_id
         generated = articles_llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=150,temperature=temperature,num_return_sequences=1)
         return generated[0]['generated_text'].split('Answer:')[1]
 
@@ -109,7 +110,8 @@ chunk_size = st.number_input("Chunk Size", min_value=10, max_value=500, value=50
 overlap = st.number_input("Overlap Size", min_value=10, max_value=500, value=50, step=10)
 num_answers = st.number_input("Number of Retrievals", min_value=1, max_value=5, value=3, step=1)
 temperature = st.slider("Temperature", min_value=0.0, max_value=1.5, value=0.7, step=0.1)
-
+models_list = ['gpt2','EleutherAI/gpt-neo-2.7B','EleutherAI/gpt-j-6B','EleutherAI/gpt-neox-20b','t5-large','bigscience/bloom-3b','facebook/opt-6.7b','google/flan-t5-large','meta-llama/LLaMA-7b-hf']
+selected_model=st.selectbox("Select a model:",models_list)
 
 def call_RAG_generate(question, context, temperature):
     st.write("**Retrieving Done, Start Answer Generating...**")
