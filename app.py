@@ -5,11 +5,12 @@ from bs4 import BeautifulSoup
 from RAG import RAG
 import pandas as pd
 from transformers import pipeline
-import time
+import rouge
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 st.session_state.articles_df = RAG.articles
-import rouge
+articles_llm = pipeline('text-generation', model='gpt2')
+
 
 def evaluate_rouge(answer,reference):
     if answer:
@@ -42,7 +43,6 @@ def scrape_articles(site_url):
 
 def rag_generate(query,context,temperature):
     try:
-        articles_llm = pipeline('text-generation', model='gpt2')
         #llm.model.config.pad_token_id = llm.model.config.eos_token_id
         print(query,context)
         generated = articles_llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=150,temperature=temperature,num_return_sequences=1)
