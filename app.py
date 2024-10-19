@@ -10,6 +10,12 @@ logger = logging.getLogger(__name__)
 st.session_state.articles_df = RAG.articles
 import rouge
 
+def evaluate_rouge(answer,reference):
+    if answer:
+        evaluator = rouge.Rouge()
+        return evaluator.get_scores(answer, reference)
+    else:
+        return "no score"
 
 # Function to scrape article URLs from a website
 def scrape_articles(site_url):
@@ -94,6 +100,7 @@ num_answers = st.number_input("Number of Retrievals", min_value=1, max_value=5, 
 temperature = st.slider("Temperature", min_value=0.0, max_value=1.5, value=0.7, step=0.1)
 
 
+
 # Button to send the question for processing
 if st.button('Ask Question'):
     if not st.session_state.articles_df.empty:
@@ -104,8 +111,7 @@ if st.button('Ask Question'):
         rag_instance = RAG()
 
         st.write(rag_instance.prepare_data(chunk_size,overlap))
-
-        #retrieving.....
+        #retrieving using Cosine
         retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
         context = ' '.join(retrieved_docs)
         if not retrieved_docs:
@@ -115,8 +121,8 @@ if st.button('Ask Question'):
             st.write(f"**Retrieval scores:**{scores}")
             response = rag_instance.rag_generate(question,context, temperature)
             st.write(f"**Cosine Retrieval:**{response}")
-
-
+            st.write(f"Evaluation:{evaluate_rouge(response,context)}")
+        #retrieving using Fais
         retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
         context = ' '.join(retrieved_docs)
         if not retrieved_docs:
@@ -126,11 +132,7 @@ if st.button('Ask Question'):
             st.write(f"**Retrieval scores:**{scores}")
             response = rag_instance.rag_generate(question,context, temperature)
             st.write(f"**Faiss Retrieval:**{response}")
-
-
-
-
-
+            st.write(f"Evaluation:{evaluate_rouge(response,context)}")
     else:
         st.error("No articles available for processing.")
 
