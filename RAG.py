@@ -102,7 +102,7 @@ class RAG:
         # Calculate the intersection and union of the word sets
         intersection = len(set(words1).intersection(set(words2)))
         union = len(set(words1).union(set(words2)))
-
+        print(union,intersection)
         return intersection / union
 
     def rag_generate(self,query,context,temperature):
