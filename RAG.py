@@ -25,11 +25,11 @@ class RAG:
         self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['all_content']]
 
 
-    def prepare_data(self,chunk_size ):
+    def prepare_data(self,chunk_size,overlap):
         for context in self.articles["all_content"]:
             # Combine question and context (as one block of text)
             # Split the document into chunks
-            chunks = self.chunk_text(context,chunk_size)
+            chunks = self.chunk_text(context,chunk_size,overlap)
             self.corpus_chunks.extend(chunks)  # Add chunks to the corpus
             # Get embeddings for each chunk
             embeddings = [self.get_embeddings(chunk) for chunk in chunks]
@@ -37,29 +37,10 @@ class RAG:
 
         # Convert chunk_embeddings to a NumPy array for efficient retrieval
         self.chunk_embeddings = np.vstack(self.chunk_embeddings)
-        return "Chunking & Embedding Done and Working on Retrieving Now........"
-
-    def save_embeddings_to_faiss(self):
-        embedding_dim = model.config.hidden_size
-        self.faiss_index = self.create_faiss_index(embedding_dim)
-        # Process each question-context pair
-        for context in self.articles["all_content"]:
-
-            # Chunk the combined text (if necessary) and generate embeddings
-            chunks = self.chunk_text(context)
-            self.corpus_chunks.extend(chunks)
-
-            for chunk in chunks:
-                embedding = self.get_embeddings(chunk)
-                self.chunk_embeddings.append(embedding)
-
-        # Convert embeddings to NumPy array (FAISS requires float32 arrays)
-        self.chunk_embeddings = np.vstack(self.chunk_embeddings).astype('float32')
-
         # Add embeddings to FAISS index
+        self.faiss_index = self.create_faiss_index(model.config.hidden_size)
         self.faiss_index.add(self.chunk_embeddings)
-        return "Chunking & Embedding Done"
-
+        return "Chunking & Embedding Done and Working on Retrieving Now........"
 
     def preprocess_text(self,text):
         text = text.lower()  # Convert to lowercase
@@ -73,7 +54,7 @@ class RAG:
         return index
 
     # Chunking: Split long documents into smaller chunks
-    def chunk_text(self,text, chunk_size, overlap=20):
+    def chunk_text(self,text, chunk_size, overlap):
         words = text.split()
         chunks = [' '.join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size - overlap)]
         return chunks
@@ -82,9 +63,8 @@ class RAG:
         return model.encode(text)
 
 
-    def retrieve_documents(self,query, top_k=1):
+    def retrieve_documents_cosine(self,query, top_k=1):
         query_embedding = self.get_embeddings([query])
-
         # Compute cosine similarities
         similarities = cosine_similarity(query_embedding, self.chunk_embeddings)
         print(similarities)
@@ -104,20 +84,11 @@ class RAG:
 
 
 
-    def generate_text(self,query,k,temperature):
-        TG = pipeline('text-generation', model='gpt2', batch_size=128)
-        TG.model.config.pad_token_id = TG.model.config.eos_token_id
-        return self.rag_generate_text(query,TG,k,temperature)
 
-    def get_answer(self,query):
-        QA = pipeline('question-answering', model='distilbert-base-cased-distilled-squad')
-        QA.model.config.pad_token_id = QA.model.config.eos_token_id
-        return self.rag_get_answer(query,QA)
 
-    def rag_generate_text(self,query,llm,k,temperature):
-        retrieved_docs,_ = self.retrieve_documents(query,k)
-        if not retrieved_docs:
-            return "No relevant documents found."
+    def rag_generate(self,query,retrieved_docs,temperature):
+        llm = pipeline('text-generation', model='gpt2', batch_size=128)
+        llm.model.config.pad_token_id = TG.model.config.eos_token_id
         context =  ' '.join(retrieved_docs)
         generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",
                         max_new_tokens=300,  # Limits the length of generated text
@@ -128,13 +99,5 @@ class RAG:
          )
         return generated
 
-    def rag_get_answer(self,query,llm):
-        retrieved_docs,_ = self.retrieve_documents(query,1)
 
-        print(len(retrieved_docs))
-        if not retrieved_docs:
-            return "No relevant documents found."
-        context =  ' '.join(retrieved_docs)
-        generated = llm(question=query,context=context)
-        return generated
 
