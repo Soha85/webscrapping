@@ -117,6 +117,7 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
             response = RAG().rag_generate(question,' '.join(retrieved_docs), temperature)
+            st.write(' '.join(retrieved_docs))
             st.write(f"Faiss Retrieval:{response}")
 
 
