@@ -86,7 +86,8 @@ class RAG:
         query_embedding = self.get_embeddings(query)
         query_embedding = np.vstack(query_embedding)
         # Compute cosine similarities
-        print(query_embedding.shape,self.chunk_embeddings.shape)
+        print(query_embedding)
+        print(self.chunk_embeddings)
         similarities = cosine_similarity(query_embedding, self.chunk_embeddings)
         # Get top_k similar chunks
         top_k_idx = np.argsort(similarities[0])[-top_k:][::-1]
