@@ -84,6 +84,7 @@ class RAG:
 
     def retrieve_documents(self,query, top_k=1):
         query_embedding = self.get_embeddings(query)
+        query_embedding = np.vstack(query_embedding)
         # Compute cosine similarities
         similarities = cosine_similarity(query_embedding, self.chunk_embeddings)
         # Get top_k similar chunks
