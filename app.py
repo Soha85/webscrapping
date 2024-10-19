@@ -102,7 +102,6 @@ if st.button('Ask Question'):
 
         # Preparing Data
         rag_instance = RAG()
-        # Create ROUGE evaluator
 
         st.write(rag_instance.prepare_data(chunk_size,overlap))
 
@@ -116,9 +115,7 @@ if st.button('Ask Question'):
             st.write(f"**Retrieval scores:**{scores}")
             response = rag_instance.rag_generate(question,context, temperature)
             st.write(f"**Cosine Retrieval:**{response}")
-            evaluator = rouge.Rouge()
-            gen_score = evaluator.get_scores(response, context)
-            st.write(f"**Generation score:**{gen_score}")
+
 
         retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
         context = ' '.join(retrieved_docs)
@@ -129,9 +126,7 @@ if st.button('Ask Question'):
             st.write(f"**Retrieval scores:**{scores}")
             response = rag_instance.rag_generate(question,context, temperature)
             st.write(f"**Faiss Retrieval:**{response}")
-            evaluator = rouge.Rouge()
-            gen_score = evaluator.get_scores(response, context)
-            st.write(f"**Generation score:**{gen_score}")
+
 
 
 
