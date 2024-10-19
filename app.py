@@ -108,26 +108,27 @@ if st.button('Ask Question'):
 
         #retrieving.....
         retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
+        context = ' '.join(retrieved_docs)
         if not retrieved_docs:
             st.write("No relevant documents found Using Cosine Similarity.")
         else:
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
-            response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
+            response = rag_instance.rag_generate(question,context, temperature)
             st.write(f"**Cosine Retrieval:**{response}")
-            gen_score = evaluator.get_scores(response, ' '.join(retrieved_docs))
+            gen_score = evaluator.get_scores(response, context)
             st.write(f"**Generation score:**{gen_score}")
 
         retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
+        context = ' '.join(retrieved_docs)
         if not retrieved_docs:
             st.write("No relevant documents found Using Faiss indexing.")
         else:
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
-            response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
+            response = rag_instance.rag_generate(question,context, temperature)
             st.write(f"**Faiss Retrieval:**{response}")
-
-            gen_score = evaluator.get_scores(response, ' '.join(retrieved_docs))
+            gen_score = evaluator.get_scores(response, context)
             st.write(f"**Generation score:**{gen_score}")
 
 
