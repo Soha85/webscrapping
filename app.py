@@ -42,7 +42,7 @@ def scrape_articles(site_url):
 
 def rag_generate(query,context,temperature):
     try:
-        articles_llm = pipeline(task=selected_model, model='gpt2')
+        articles_llm = pipeline(task='text-generation', model=selected_model)
         articles_llm.model.config.pad_token_id = articles_llm.model.config.eos_token_id
         generated = articles_llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=150,temperature=temperature,num_return_sequences=1)
         return generated[0]['generated_text'].split('Answer:')[1]
@@ -52,7 +52,7 @@ def rag_generate(query,context,temperature):
         return None
 
 # Streamlit UI
-st.title("Web Article Scraper")
+st.title("Web Scraping to QA: A RAG-Based Approach")
 # Session state for storing scraped data
 if "articles_df" not in st.session_state:
     st.session_state.articles_df = pd.DataFrame(columns=["title", "content"])
