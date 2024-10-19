@@ -48,7 +48,7 @@ def rag_generate(query,context,temperature):
         return generated[0]['generated_text'].split('Answer:')[1]
 
     except Exception as e:
-        print(f"Error generating text: {e}")
+        st.write(f"Error generating text: {e}")
         return None
 
 # Streamlit UI
