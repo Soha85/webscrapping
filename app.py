@@ -109,9 +109,9 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
-            response,score = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
+            response,gen_score = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
             st.write(f"**Cosine Retrieval:**{response}")
-            st.write(f"**Generation score:**{score}")
+            st.write(f"**Generation score:**{gen_score}")
 
         retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
         if not retrieved_docs:
@@ -119,9 +119,9 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
-            response,score = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
+            response,gen_score = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
             st.write(f"**Faiss Retrieval:**{response}")
-            st.write(f"**Generation score:**{score}")
+            st.write(f"**Generation score:**{gen_score}")
 
 
 
