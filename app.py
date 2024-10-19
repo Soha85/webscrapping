@@ -120,7 +120,7 @@ if st.button('Ask Question'):
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
             response = rag_instance.rag_generate(question,context, temperature)
-            st.write(f"**Cosine Retrieval:**{response}")
+            st.write(f"Cosine Retrieval:{response}")
             st.write(f"Evaluation:{evaluate_rouge(response,context)}")
         #retrieving using Fais
         retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
@@ -131,7 +131,7 @@ if st.button('Ask Question'):
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
             response = rag_instance.rag_generate(question,context, temperature)
-            st.write(f"**Faiss Retrieval:**{response}")
+            st.write(f"Faiss Retrieval:{response}")
             st.write(f"Evaluation:{evaluate_rouge(response,context)}")
     else:
         st.error("No articles available for processing.")
