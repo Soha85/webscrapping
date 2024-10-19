@@ -19,7 +19,7 @@ class RAG:
     articles = pd.DataFrame([])
     corpus_chunks = []
     chunk_embeddings = []
-    faiss_index = 0
+    faiss_index = None
     def __init__(self):
         self.articles['all_content'] = [row['title'] + " " + row['content'] for x, row in self.articles.iterrows()]
         self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['all_content']]
@@ -38,7 +38,7 @@ class RAG:
         # Convert chunk_embeddings to a NumPy array for efficient retrieval
         self.chunk_embeddings = np.vstack(self.chunk_embeddings)
         # Add embeddings to FAISS index
-        self.faiss_index = self.create_faiss_index(model.config.hidden_size)
+        self.faiss_index = self.create_faiss_index(self.chunk_embeddings.shape[1])
         self.faiss_index.add(self.chunk_embeddings)
         return "Chunking & Embedding Done and Working on Retrieving Now........"
 
@@ -67,7 +67,7 @@ class RAG:
         query_embedding = self.get_embeddings([query])
         # Compute cosine similarities
         similarities = cosine_similarity(query_embedding, self.chunk_embeddings)
-        print(similarities)
+
         # Get top_k similar chunks
         top_k_idx = np.argsort(similarities[0])[-top_k:][::-1]
         return [self.corpus_chunks[i] for i in top_k_idx], similarities[0][top_k_idx]
