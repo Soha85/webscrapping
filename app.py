@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from RAG import RAG
 import pandas as pd
+from transformers import pipeline
 import time
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -38,6 +39,17 @@ def scrape_articles(site_url):
 
     full_text = ' '.join(all_paragraphs)
     return title, full_text.strip()
+
+def rag_generate(query,context,temperature):
+    try:
+        llm = pipeline('text-generation', model='gpt2', batch_size=128)
+        #llm.model.config.pad_token_id = llm.model.config.eos_token_id
+        generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=150,temperature=temperature,num_return_sequences=1)
+        return generated[0]['generated_text'].split('Answer:')[1]
+
+    except Exception as e:
+        print(f"Error generating text: {e}")
+        return None
 
 # Streamlit UI
 st.title("Web Article Scraper")
@@ -119,7 +131,7 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
-            response = rag_instance.rag_generate(question,context, temperature)
+            response = rag_generate(question,context, temperature)
             st.write(f"Cosine Retrieval:{response}")
             st.write(f"Evaluation:{evaluate_rouge(response,context)}")
         #retrieving using Fais
@@ -130,7 +142,7 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
-            response = rag_instance.rag_generate(question,context, temperature)
+            response = rag_generate(question,context, temperature)
             st.write(f"Faiss Retrieval:{response}")
             st.write(f"Evaluation:{evaluate_rouge(response,context)}")
     else:

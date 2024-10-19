@@ -5,7 +5,7 @@ import pandas as pd
 from docutils.nodes import document
 from sentence_transformers import SentenceTransformer
 warnings.filterwarnings("ignore", category=UserWarning)
-from transformers import BertTokenizer, BertModel, pipeline
+from transformers import BertModel
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
@@ -88,16 +88,7 @@ class RAG:
         return results,scores
 
 
-    def rag_generate(self,query,context,temperature):
-        try:
-            llm = pipeline('text-generation', model='gpt2', batch_size=128)
-            #llm.model.config.pad_token_id = llm.model.config.eos_token_id
-            generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=200,temperature=temperature,num_return_sequences=1)
-            return generated[0]['generated_text'].split('Answer:')[1]
 
-        except Exception as e:
-            print(f"Error generating text: {e}")
-            return
 
 
 
