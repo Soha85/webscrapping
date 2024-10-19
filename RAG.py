@@ -99,6 +99,7 @@ class RAG:
 
         except Exception as e:
             print(f"Error generating text: {e}")
+            return
         return generated
 
 
