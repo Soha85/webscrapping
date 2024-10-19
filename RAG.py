@@ -30,7 +30,6 @@ class RAG:
             # Combine question and context (as one block of text)
             # Split the document into chunks
             chunks = self.chunk_text(context,chunk_size,overlap)
-            print(chunks)
             self.corpus_chunks.extend(chunks)  # Add chunks to the corpus
             # Get embeddings for each chunk
             embeddings = [self.get_embeddings(chunk) for chunk in chunks]
