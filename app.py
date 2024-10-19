@@ -101,9 +101,16 @@ if st.button('Ask Question'):
 
         # Replace with your actual RAG processing logic
         st.write(RAG().prepare_data())
-        response = RAG().generate_text(question)
+        response = RAG().generate_text(question,3)
+        answers=[]
         answer_placeholder.empty()  # Clear placeholder
-        st.write(f"Answer: {response}")
+        if "Answer:" in response:
+            # Split the text at "Answer:" and take the part after it
+            answer = response.split("Answer:")[1].strip()
+            answers.append(answer)
+        for i, ans in enumerate(answers, 1):
+            st.write(f"Generated Answer {i}: {ans}")
+
     else:
         st.error("No articles available for processing.")
 

@@ -104,10 +104,10 @@ class RAG:
 
 
 
-    def generate_text(self,query):
+    def generate_text(self,query,k=1):
         TG = pipeline('text-generation', model='gpt2', batch_size=128)
         TG.model.config.pad_token_id = TG.model.config.eos_token_id
-        return self.rag_generate_text(query,TG,3)
+        return self.rag_generate_text(query,TG,k)
 
     def get_answer(self,query):
         QA = pipeline('question-answering', model='distilbert-base-cased-distilled-squad')
