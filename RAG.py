@@ -101,8 +101,8 @@ class RAG:
             evaluator = rouge.Rouge()
             rouge_scores = evaluator.get_scores(context, reference)
 
-            scores = {'ROUGE:':rouge_scores}
-            return reference,scores
+
+            return reference,rouge_scores
 
         except Exception as e:
             print(f"Error generating text: {e}")
