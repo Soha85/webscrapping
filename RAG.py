@@ -112,11 +112,13 @@ class RAG:
             generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=200,temperature=temperature,num_return_sequences=1)
             # Create ROUGE evaluator
             evaluator = rouge.Rouge()
+            reference = generated[0]['generated_text'].split('Answer:')[1]
 
             # Evaluate summaries
             rouge_scores = evaluator.get_scores(context, generated[0]['generated_text'].split('Answer:')[1])
             jaccard_score = self.calculate_jaccard_similarity(context, generated[0]['generated_text'].split('Answer:')[1])
-            return generated[0]['generated_text'].split('Answer:')[1],{'ROUGE:':rouge_scores,'Jaccard:':jaccard_score}
+            scores = {'ROUGE:':rouge_scores}
+            return reference,scores
 
         except Exception as e:
             print(f"Error generating text: {e}")
