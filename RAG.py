@@ -89,21 +89,6 @@ class RAG:
 
         return results,scores
 
-    def remove_stop_words(self,text):
-        words = nltk.word_tokenize(text.lower())
-        stop_words = set(stopwords.words('english'))
-        filtered_words = [word for word in words if word not in stop_words]
-        return filtered_words
-
-    def calculate_jaccard_similarity(self,text1, text2):
-        words1 = self.remove_stop_words(text1)
-        words2 = self.remove_stop_words(text2)
-
-        # Calculate the intersection and union of the word sets
-        intersection = len(set(words1).intersection(set(words2)))
-        union = len(set(words1).union(set(words2)))
-        print(union,intersection)
-        return intersection / union
 
     def rag_generate(self,query,context,temperature):
         try:
@@ -114,10 +99,9 @@ class RAG:
             reference = generated[0]['generated_text'].split('Answer:')[1]
             # Create ROUGE evaluator
             evaluator = rouge.Rouge()
-
             rouge_scores = evaluator.get_scores(context, reference)
-            jaccard_score = self.calculate_jaccard_similarity(context, reference)
-            scores = {'ROUGE:':rouge_scores,'Jaccard':jaccard_score}
+
+            scores = {'ROUGE:':rouge_scores}
             return reference,scores
 
         except Exception as e:
