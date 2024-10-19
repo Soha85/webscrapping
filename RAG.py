@@ -13,7 +13,8 @@ import numpy as np
 bert_model = BertModel.from_pretrained('bert-base-uncased')
 model = SentenceTransformer('all-MiniLM-L6-v2')  # Example with SBERT
 import rouge
-
+import nltk
+from nltk.corpus import stopwords
 
 class RAG:
     articles = pd.DataFrame([])
@@ -84,9 +85,25 @@ class RAG:
         results,scores = [],[]
         for i, idx in enumerate(indices[0]):
             results.append(self.corpus_chunks[idx])
-            scores.append(distances[0][i])
+            scores.append(float(distances[0][i]))
 
         return results,scores
+
+    def remove_stop_words(self,text):
+        words = nltk.word_tokenize(text.lower())
+        stop_words = set(stopwords.words('english'))
+        filtered_words = [word for word in words if word not in stop_words]
+        return filtered_words
+
+    def calculate_jaccard_similarity(self,text1, text2):
+        words1 = self.remove_stop_words(text1)
+        words2 = self.remove_stop_words(text2)
+
+        # Calculate the intersection and union of the word sets
+        intersection = len(set(words1).intersection(set(words2)))
+        union = len(set(words1).union(set(words2)))
+
+        return intersection / union
 
     def rag_generate(self,query,context,temperature):
         try:
@@ -97,8 +114,9 @@ class RAG:
             evaluator = rouge.Rouge()
 
             # Evaluate summaries
-            scores = evaluator.get_scores(context, generated[0]['generated_text'].split('Answer:')[1])
-            return generated[0]['generated_text'].split('Answer:')[1],scores
+            rouge_scores = evaluator.get_scores(context, generated[0]['generated_text'].split('Answer:')[1])
+            jaccard_score = self.calculate_jaccard_similarity(context, generated[0]['generated_text'].split('Answer:')[1])
+            return generated[0]['generated_text'].split('Answer:')[1],[{'ROUGE:':rouge_scores},{'Jaccard:':jaccard_score}]
 
         except Exception as e:
             print(f"Error generating text: {e}")
