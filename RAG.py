@@ -83,8 +83,8 @@ class RAG:
 
 
     def retrieve_documents(self,query, top_k=1):
-        query_embedding = self.get_embeddings(query)
-        query_embedding = np.vstack(query_embedding)
+        query_embedding = self.get_embeddings([query])
+
         # Compute cosine similarities
         similarities = cosine_similarity(query_embedding, self.chunk_embeddings)
         print(similarities)
@@ -93,7 +93,7 @@ class RAG:
         return [self.corpus_chunks[i] for i in top_k_idx], similarities[0][top_k_idx]
 
     def retrieve_documents_faiss(self,query, k=1):
-        query_embedding = self.get_embeddings(query)
+        query_embedding = self.get_embeddings([query])
         distances, indices = self.faiss_index.search(query_embedding, k)
         results,scores = [],[]
         for i, idx in enumerate(indices[0]):
