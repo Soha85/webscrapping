@@ -122,14 +122,14 @@ def call_RAG_generate(question, context, temperature):
 # Button to send the question for processing
 if st.button('Ask Question'):
     if not st.session_state.articles_df.empty:
-        st.write("**Processing articles and do Emdeddings...**")
+        st.write("**Processing articles, Start Chunking and Emdeddings...**")
         #time.sleep(2)  # Simulate processing time
         # Preparing Data
         rag_instance = RAG()
         st.write(rag_instance.prepare_data(chunk_size,overlap))
         try:
             #retrieving using Cosine
-            st.write("Retrieving using Cosine Similarity.....")
+            st.write("**Retrieving using Cosine Similarity.....**")
             retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
             context = ' '.join(retrieved_docs)
             if not retrieved_docs:
@@ -141,7 +141,7 @@ if st.button('Ask Question'):
 
         try:
             #retrieving using Fais
-            st.write("Retrieving using Faiss Similarity.....")
+            st.write("**Retrieving using Faiss Similarity.....**")
             retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
             context = ' '.join(retrieved_docs)
             if not retrieved_docs:

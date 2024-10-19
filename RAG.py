@@ -45,7 +45,7 @@ class RAG:
         # Save the FAISS index to a file
         faiss.write_index(self.faiss_index, "faiss_index.bin")
 
-        return "**Chunking & Embedding Done and Working on Retrieving Now........**"
+        return "**Chunking & Embedding Done, Start Retrieving Now........**"
 
     def preprocess_text(self,text):
         text = text.lower()  # Convert to lowercase
