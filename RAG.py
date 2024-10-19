@@ -63,7 +63,7 @@ class RAG:
         return model.encode(text)
 
 
-    def retrieve_documents_cosine(self,query, top_k=1):
+    def retrieve_documents_cosine(self,query, top_k):
         query_embedding = self.get_embeddings([query])
         # Compute cosine similarities
         similarities = cosine_similarity(query_embedding, self.chunk_embeddings)
@@ -72,7 +72,7 @@ class RAG:
         top_k_idx = np.argsort(similarities[0])[-top_k:][::-1]
         return [self.corpus_chunks[i] for i in top_k_idx], similarities[0][top_k_idx]
 
-    def retrieve_documents_faiss(self,query, k=1):
+    def retrieve_documents_faiss(self,query, k):
         query_embedding = self.get_embeddings([query])
         distances, indices = self.faiss_index.search(query_embedding, k)
         results,scores = [],[]
@@ -82,13 +82,9 @@ class RAG:
 
         return results,scores
 
-
-
-
-
     def rag_generate(self,query,retrieved_docs,temperature):
         llm = pipeline('text-generation', model='gpt2', batch_size=128)
-        llm.model.config.pad_token_id = llm.model.config.eos_token_id
+        #llm.model.config.pad_token_id = llm.model.config.eos_token_id
         context =  ' '.join(retrieved_docs)
         generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",
                         max_new_tokens=300,  # Limits the length of generated text
