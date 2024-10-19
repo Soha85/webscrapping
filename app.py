@@ -100,6 +100,8 @@ if st.button('Ask Question'):
 
         # Preparing Data
         rag_instance = RAG()
+        # Create ROUGE evaluator
+        evaluator = rouge.Rouge()
         st.write(rag_instance.prepare_data(chunk_size,overlap))
 
         #retrieving.....
@@ -109,8 +111,9 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
-            response,gen_score = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
+            response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
             st.write(f"**Cosine Retrieval:**{response}")
+            gen_score = evaluator.get_scores(response, ' '.join(retrieved_docs))
             st.write(f"**Generation score:**{gen_score}")
 
         retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
@@ -119,8 +122,10 @@ if st.button('Ask Question'):
         else:
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
             st.write(f"**Retrieval scores:**{scores}")
-            response,gen_score = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
+            response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
             st.write(f"**Faiss Retrieval:**{response}")
+
+            gen_score = evaluator.get_scores(response, ' '.join(retrieved_docs))
             st.write(f"**Generation score:**{gen_score}")
 
 

@@ -96,13 +96,7 @@ class RAG:
             #llm.model.config.pad_token_id = llm.model.config.eos_token_id
             generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=200,temperature=temperature,num_return_sequences=1)
 
-            reference = generated[0]['generated_text'].split('Answer:')[1]
-            # Create ROUGE evaluator
-            evaluator = rouge.Rouge()
-            rouge_scores = evaluator.get_scores(context, reference)
-
-
-            return reference,rouge_scores
+            return generated[0]['generated_text'].split('Answer:')[1]
 
         except Exception as e:
             print(f"Error generating text: {e}")
