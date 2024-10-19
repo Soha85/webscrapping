@@ -89,9 +89,8 @@ class RAG:
 
         return results,scores
 
-    def rag_generate(self,query,retrieved_docs,temperature):
+    def rag_generate(self,query,context,temperature):
         try:
-            context =  ' '.join(retrieved_docs)
             generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=200,temperature=temperature,num_return_sequences=1)
             return generated[0]['generated_text']
 
