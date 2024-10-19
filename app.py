@@ -8,6 +8,8 @@ import time
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 st.session_state.articles_df = RAG.articles
+import rouge
+
 
 # Function to scrape article URLs from a website
 def scrape_articles(site_url):

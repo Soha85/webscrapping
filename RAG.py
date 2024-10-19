@@ -12,9 +12,7 @@ import numpy as np
 #bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 bert_model = BertModel.from_pretrained('bert-base-uncased')
 model = SentenceTransformer('all-MiniLM-L6-v2')  # Example with SBERT
-import rouge
-import nltk
-from nltk.corpus import stopwords
+
 
 class RAG:
     articles = pd.DataFrame([])
