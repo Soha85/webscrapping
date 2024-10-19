@@ -43,7 +43,6 @@ def scrape_articles(site_url):
 
 def rag_generate(query,context,temperature):
     try:
-        print(query,context)
         generated = articles_llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=150,temperature=temperature,num_return_sequences=1)
         return generated[0]['generated_text'].split('Answer:')[1]
 
@@ -121,10 +120,9 @@ if st.button('Ask Question'):
 
         # Preparing Data
         rag_instance = RAG()
-
         st.write(rag_instance.prepare_data(chunk_size,overlap))
-        #retrieving using Cosine
 
+        #retrieving using Cosine
         retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
         context = ' '.join(retrieved_docs)
         if not retrieved_docs:
@@ -135,6 +133,7 @@ if st.button('Ask Question'):
             response = rag_generate(question,context, temperature)
             st.write(f"Cosine Retrieval:{response}")
             st.write(f"Evaluation:{evaluate_rouge(response,context)}")
+
         #retrieving using Fais
         retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
         context = ' '.join(retrieved_docs)
