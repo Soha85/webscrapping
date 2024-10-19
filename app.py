@@ -111,42 +111,48 @@ num_answers = st.number_input("Number of Retrievals", min_value=1, max_value=5, 
 temperature = st.slider("Temperature", min_value=0.0, max_value=1.5, value=0.7, step=0.1)
 
 
+def call_RAG_generate(question, context, temperature):
+    st.write("**Retrieving Done, Start Answer Generating...**")
+    st.write(f"**Retrieval scores:**{scores}")
+    ans = rag_generate(question, context, temperature)
+    st.write(f"Retrieval Answer:{ans}")
+    st.write(f"Evaluation:{evaluate_rouge(ans, context)}")
+
 
 # Button to send the question for processing
 if st.button('Ask Question'):
     if not st.session_state.articles_df.empty:
         st.write("**Processing articles and do Emdeddings...**")
         #time.sleep(2)  # Simulate processing time
-
         # Preparing Data
         rag_instance = RAG()
         st.write(rag_instance.prepare_data(chunk_size,overlap))
+        try:
+            #retrieving using Cosine
+            st.write("Retrieving using Cosine Similarity.....")
+            retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
+            context = ' '.join(retrieved_docs)
+            if not retrieved_docs:
+                st.write("No relevant documents found Using Cosine Similarity.")
+            else:
+                call_RAG_generate(question,context, temperature)
+        except Exception as e:
+            st.write(f"Error in Retrieving COSINE: {e}")
 
-        #retrieving using Cosine
-        retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
-        context = ' '.join(retrieved_docs)
-        if not retrieved_docs:
-            st.write("No relevant documents found Using Cosine Similarity.")
-        else:
-            st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
-            st.write(f"**Retrieval scores:**{scores}")
-            response = rag_generate(question,context, temperature)
-            st.write(f"Cosine Retrieval:{response}")
-            st.write(f"Evaluation:{evaluate_rouge(response,context)}")
-
-        #retrieving using Fais
-        retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
-        context = ' '.join(retrieved_docs)
-        if not retrieved_docs:
-            st.write("No relevant documents found Using Faiss indexing.")
-        else:
-            st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
-            st.write(f"**Retrieval scores:**{scores}")
-            response = rag_generate(question,context, temperature)
-            st.write(f"Faiss Retrieval:{response}")
-            st.write(f"Evaluation:{evaluate_rouge(response,context)}")
+        try:
+            #retrieving using Fais
+            st.write("Retrieving using Faiss Similarity.....")
+            retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
+            context = ' '.join(retrieved_docs)
+            if not retrieved_docs:
+                st.write("No relevant documents found Using Faiss indexing.")
+            else:
+                call_RAG_generate(question,context, temperature)
+        except Exception as e:
+            st.write(f"Error in Retrieving FAISS: {e}")
     else:
         st.error("No articles available for processing.")
+
 
 
 
