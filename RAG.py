@@ -3,14 +3,15 @@ import re
 import warnings
 import pandas as pd
 from docutils.nodes import document
-
+from sentence_transformers import SentenceTransformer
 warnings.filterwarnings("ignore", category=UserWarning)
 from transformers import BertTokenizer, BertModel, pipeline
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
-model = BertModel.from_pretrained('bert-base-uncased')
+#bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+#bert_model = BertModel.from_pretrained('bert-base-uncased')
+model = SentenceTransformer('all-MiniLM-L6-v2')  # Example with SBERT
 
 
 
@@ -30,7 +31,7 @@ class RAG:
             combined_text = question + " " + context
             preprocessed_text = self.preprocess_text(combined_text)
             # Split the document into chunks
-            chunks = self.chunk_text(preprocessed_text, chunk_size=50)
+            chunks = self.chunk_text(preprocessed_text)
             self.corpus_chunks.extend(chunks)  # Add chunks to the corpus
             # Get embeddings for each chunk
             embeddings = [self.get_embeddings(chunk) for chunk in chunks]
@@ -76,18 +77,16 @@ class RAG:
         index = faiss.IndexFlatL2(embedding_dim)  # L2 distance for similarity search
         return index
 
-
-
-
     # Chunking: Split long documents into smaller chunks
-    def chunk_text(self,text, chunk_size=50):
+    def chunk_text(text, chunk_size=100, overlap=20):
         words = text.split()
-        # Create chunks of approximately chunk_size words
-        return [' '.join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
+        chunks = [' '.join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size - overlap)]
+        return chunks
 
+    def get_embedding(self,text):
+        return model.encode(text)
 
-
-    def get_embeddings(self,text):
+    def get_bert_embeddings(self,text):
         inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
         with torch.no_grad():
             outputs = model(**inputs)
@@ -108,7 +107,7 @@ class RAG:
         for i, idx in enumerate(indices[0]):
             results.append(self.corpus_chunks[idx])
             scores.append(distances[0][i])
-        print(len(results))
+
         return results,scores
 
 
@@ -116,20 +115,26 @@ class RAG:
     def generate_text(self,query):
         TG = pipeline('text-generation', model='gpt2', batch_size=128)
         TG.model.config.pad_token_id = TG.model.config.eos_token_id
-        return self.rag_generate_text(query,TG)
+        return self.rag_generate_text(query,TG,3)
 
     def get_answer(self,query):
         QA = pipeline('question-answering', model='distilbert-base-cased-distilled-squad')
         QA.model.config.pad_token_id = QA.model.config.eos_token_id
         return self.rag_get_answer(query,QA)
 
-    def rag_generate_text(self,query,llm):
-        retrieved_docs,_ = self.retrieve_documents_faiss(query,1)
+    def rag_generate_text(self,query,llm,k=1):
+        retrieved_docs,_ = self.retrieve_documents(query,k)
         if not retrieved_docs:
             return "No relevant documents found."
         context =  ' '.join(retrieved_docs)
-        generated = llm(f"Query: {query}\nContext: {context}\nAnswer:", max_new_tokens=200, num_return_sequences=1)
-        return str(generated[0]['generated_text'].split("Answer:")[1].strip())
+        generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",
+                        max_new_tokens=300,  # Limits the length of generated text
+                        temperature=0.8,  # Adds a bit of randomness but not too much
+                        top_k=50,  # Only consider the top 50 tokens for each step
+                        top_p=0.9,  # Nucleus sampling to ensure diversity while being focused
+                        num_return_sequences=1,  # Generate only one response
+         )
+        return generated
 
     def rag_get_answer(self,query,llm):
         retrieved_docs,_ = self.retrieve_documents(query,1)

@@ -101,7 +101,7 @@ if st.button('Ask Question'):
 
         # Replace with your actual RAG processing logic
         st.write(RAG().prepare_data())
-        response = RAG().get_answer(question)
+        response = RAG().generate_text(question)
         answer_placeholder.empty()  # Clear placeholder
         st.write(f"Answer: {response}")
     else:
