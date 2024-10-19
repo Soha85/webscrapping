@@ -91,7 +91,7 @@ class RAG:
     def rag_generate(self,query,context,temperature):
         try:
             llm = pipeline('text-generation', model='gpt2', batch_size=128)
-            #llm.model.config.pad_token_id = llm.model.config.eos_token_id
+            llm.model.config.pad_token_id = llm.model.config.eos_token_id
             generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=200,temperature=temperature,num_return_sequences=1)
             return generated[0]['generated_text'].split('Answer:')[1]
 
