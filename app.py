@@ -99,24 +99,25 @@ if st.button('Ask Question'):
         #time.sleep(2)  # Simulate processing time
 
         # Preparing Data
-        st.write(RAG().prepare_data(chunk_size,overlap))
+        rag_instance = RAG()
+        st.write(rag_instance.prepare_data(chunk_size,overlap))
 
         #retrieving.....
-        retrieved_docs, _ = RAG().retrieve_documents_cosine(question, num_answers)
+        retrieved_docs, _ = rag_instance.retrieve_documents_cosine(question, num_answers)
         if not retrieved_docs:
             st.write("No relevant documents found Using Cosine Similarity.")
         else:
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
-            response = RAG().rag_generate(question,' '.join(retrieved_docs), temperature)
+            response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
             st.write(' '.join(retrieved_docs))
             st.write(f"Cosine Retrieval:{response}")
 
-        retrieved_docs, _ = RAG().retrieve_documents_faiss(question, num_answers)
+        retrieved_docs, _ = rag_instance.retrieve_documents_faiss(question, num_answers)
         if not retrieved_docs:
             st.write("No relevant documents found Using Faiss indexing.")
         else:
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
-            response = RAG().rag_generate(question,' '.join(retrieved_docs), temperature)
+            response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
             st.write(' '.join(retrieved_docs))
             st.write(f"Faiss Retrieval:{response}")
 
