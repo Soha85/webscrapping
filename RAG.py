@@ -110,14 +110,14 @@ class RAG:
             llm = pipeline('text-generation', model='gpt2', batch_size=128)
             #llm.model.config.pad_token_id = llm.model.config.eos_token_id
             generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=200,temperature=temperature,num_return_sequences=1)
+
+            reference = generated[0]['generated_text'].split('Answer:')[1]
             # Create ROUGE evaluator
             evaluator = rouge.Rouge()
-            reference = generated[0]['generated_text'].split('Answer:')[1]
 
-            # Evaluate summaries
-            rouge_scores = evaluator.get_scores(context, generated[0]['generated_text'].split('Answer:')[1])
-            jaccard_score = self.calculate_jaccard_similarity(context, generated[0]['generated_text'].split('Answer:')[1])
-            scores = {'ROUGE:':rouge_scores}
+            rouge_scores = evaluator.get_scores(context, reference)
+            jaccard_score = self.calculate_jaccard_similarity(context, reference)
+            scores = {'ROUGE:':rouge_scores,'Jaccard':jaccard_score}
             return reference,scores
 
         except Exception as e:
