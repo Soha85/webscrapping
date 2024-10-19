@@ -103,21 +103,25 @@ if st.button('Ask Question'):
         st.write(rag_instance.prepare_data(chunk_size,overlap))
 
         #retrieving.....
-        retrieved_docs, _ = rag_instance.retrieve_documents_cosine(question, num_answers)
+        retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
         if not retrieved_docs:
             st.write("No relevant documents found Using Cosine Similarity.")
         else:
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
-            response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
+            st.write(f"**Retrieval scores:{scores}")
+            response,score = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
             st.write(f"**Cosine Retrieval:**{response}")
+            st.write(f"**Generation score:**{score}")
 
-        retrieved_docs, _ = rag_instance.retrieve_documents_faiss(question, num_answers)
+        retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
         if not retrieved_docs:
             st.write("No relevant documents found Using Faiss indexing.")
         else:
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
-            response = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
+            st.write(f"**Retrieval scores:{scores}")
+            response,score = rag_instance.rag_generate(question,' '.join(retrieved_docs), temperature)
             st.write(f"**Faiss Retrieval:**{response}")
+            st.write(f"**Generation score:**{score}")
 
 
 
