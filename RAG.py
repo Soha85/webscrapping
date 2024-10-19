@@ -79,8 +79,8 @@ class RAG:
         return [self.corpus_chunks[i] for i in top_k_idx], similarities[0][top_k_idx]
 
     def retrieve_documents_faiss(self,query, k):
-        query_embedding = self.get_embeddings([query])
         self.faiss_index = faiss.read_index("faiss_index.bin")
+        query_embedding = self.get_embeddings([query])
         distances, indices = self.faiss_index.search(query_embedding, k)
         results,scores = [],[]
         for i, idx in enumerate(indices[0]):
@@ -92,9 +92,8 @@ class RAG:
     def rag_generate(self,query,retrieved_docs,temperature):
         try:
             context =  ' '.join(retrieved_docs)
-            generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",
-                        max_new_tokens=150,  temperature=temperature,num_return_sequences=1)
-            return generated
+            generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=200,temperature=temperature,num_return_sequences=1)
+            return generated[0]['generated_text']
 
         except Exception as e:
             print(f"Error generating text: {e}")
