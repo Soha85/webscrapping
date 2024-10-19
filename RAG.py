@@ -62,6 +62,7 @@ class RAG:
     def chunk_text(self,text, chunk_size, overlap):
         words = text.split(' ')
         chunks = [' '.join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size - overlap)]
+        print(chunks)
         return chunks
 
     def get_embeddings(self,text):
