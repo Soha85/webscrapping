@@ -10,7 +10,7 @@ import torch
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 #bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
-#bert_model = BertModel.from_pretrained('bert-base-uncased')
+bert_model = BertModel.from_pretrained('bert-base-uncased')
 model = SentenceTransformer('all-MiniLM-L6-v2')  # Example with SBERT
 
 
@@ -40,7 +40,7 @@ class RAG:
         # Add embeddings to FAISS index
         # Ensure faiss_index is initialized before adding embeddings
         if self.faiss_index is None:
-            self.faiss_index = self.create_faiss_index(self.chunk_embeddings.shape[1])
+            self.faiss_index = self.create_faiss_index(bert_model.config.hidden_size)
         self.faiss_index.add(self.chunk_embeddings)
         # Save the FAISS index to a file
         faiss.write_index(self.faiss_index, "faiss_index.bin")
@@ -94,10 +94,7 @@ class RAG:
             llm.model.config.pad_token_id = llm.model.config.eos_token_id
             context =  ' '.join(retrieved_docs)
             generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",
-                        max_new_tokens=150,  # Limits the length of generated text
-                        temperature=temperature,  # Adds a bit of randomness but not too much
-                        num_return_sequences=1,  # Generate only one response
-            )
+                        max_new_tokens=150,  temperature=temperature,num_return_sequences=1)
 
 
         except Exception as e:
