@@ -21,17 +21,15 @@ class RAG:
     chunk_embeddings = []
     faiss_index = 0
     def __init__(self):
-        self.articles['content'] = [row['title'] + " " + row['content'] for x, row in self.articles.iterrows()]
-        self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['content']]
+        self.articles['all_content'] = [row['title'] + " " + row['content'] for x, row in self.articles.iterrows()]
+        self.articles['cleaned_text'] = [self.preprocess_text(x) for x in self.articles['all_content']]
 
 
     def prepare_data(self):
-        for question, context in zip(self.articles["title"], self.articles["content"]):
+        for context in self.articles["all_content"]:
             # Combine question and context (as one block of text)
-            combined_text = question + " " + context
-            preprocessed_text = self.preprocess_text(combined_text)
             # Split the document into chunks
-            chunks = self.chunk_text(preprocessed_text)
+            chunks = self.chunk_text(context)
             self.corpus_chunks.extend(chunks)  # Add chunks to the corpus
             # Get embeddings for each chunk
             embeddings = [self.get_embeddings(chunk) for chunk in chunks]
@@ -45,13 +43,10 @@ class RAG:
         embedding_dim = model.config.hidden_size
         self.faiss_index = self.create_faiss_index(embedding_dim)
         # Process each question-context pair
-        for question, context in zip(self.articles["title"],self.articles["content"]):
-            # Combine question and context (as one block of text)
-            combined_text = question + " " + context
-            preprocessed_text = self.preprocess_text(combined_text)
+        for context in self.articles["all_content"]:
 
             # Chunk the combined text (if necessary) and generate embeddings
-            chunks = self.chunk_text(preprocessed_text)
+            chunks = self.chunk_text(context)
             self.corpus_chunks.extend(chunks)
 
             for chunk in chunks:
@@ -78,19 +73,14 @@ class RAG:
         return index
 
     # Chunking: Split long documents into smaller chunks
-    def chunk_text(text, chunk_size=100, overlap=20):
+    def chunk_text(self,text, chunk_size=100, overlap=20):
         words = text.split()
         chunks = [' '.join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size - overlap)]
         return chunks
 
-    def get_embedding(self,text):
+    def get_embeddings(self,text):
         return model.encode(text)
 
-    def get_bert_embeddings(self,text):
-        inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
-        with torch.no_grad():
-            outputs = model(**inputs)
-        return outputs.last_hidden_state[:, 0, :].numpy()
 
     def retrieve_documents(self,query, top_k=1):
         query_embedding = self.get_embeddings(query)
