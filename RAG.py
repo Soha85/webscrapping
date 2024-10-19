@@ -40,7 +40,7 @@ class RAG:
         # Add embeddings to FAISS index
         # Ensure faiss_index is initialized before adding embeddings
         if self.faiss_index is None:
-            self.faiss_index = self.create_faiss_index(self.chunk_embeddings.shape)
+            self.faiss_index = self.create_faiss_index(self.chunk_embeddings.shape[1])
             self.faiss_index.add(self.chunk_embeddings)
 
         return "**Chunking & Embedding Done and Working on Retrieving Now........**"
