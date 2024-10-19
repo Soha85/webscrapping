@@ -9,8 +9,8 @@ import rouge
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 st.session_state.articles_df = RAG.articles
-articles_llm = pipeline('text-generation', model='gpt2')
-
+articles_llm = pipeline(task='text-generation', model='gpt2')
+articles_llm.model.config.pad_token_id = articles_llm.model.config.eos_token_id
 
 def evaluate_rouge(answer,reference):
     if answer:
@@ -43,7 +43,6 @@ def scrape_articles(site_url):
 
 def rag_generate(query,context,temperature):
     try:
-        #llm.model.config.pad_token_id = llm.model.config.eos_token_id
         print(query,context)
         generated = articles_llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=150,temperature=temperature,num_return_sequences=1)
         return generated[0]['generated_text'].split('Answer:')[1]
@@ -125,6 +124,7 @@ if st.button('Ask Question'):
 
         st.write(rag_instance.prepare_data(chunk_size,overlap))
         #retrieving using Cosine
+
         retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
         context = ' '.join(retrieved_docs)
         if not retrieved_docs:
