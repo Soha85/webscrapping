@@ -41,7 +41,9 @@ class RAG:
         # Ensure faiss_index is initialized before adding embeddings
         if self.faiss_index is None:
             self.faiss_index = self.create_faiss_index(self.chunk_embeddings.shape[1])
-            self.faiss_index.add(self.chunk_embeddings)
+        self.faiss_index.add(self.chunk_embeddings)
+        # Save the FAISS index to a file
+        faiss.write_index(self.faiss_index, "faiss_index.bin")
 
         return "**Chunking & Embedding Done and Working on Retrieving Now........**"
 
@@ -77,6 +79,7 @@ class RAG:
 
     def retrieve_documents_faiss(self,query, k):
         query_embedding = self.get_embeddings([query])
+        self.faiss_index = faiss.read_index("faiss_index.bin")
         distances, indices = self.faiss_index.search(query_embedding, k)
         results,scores = [],[]
         for i, idx in enumerate(indices[0]):
