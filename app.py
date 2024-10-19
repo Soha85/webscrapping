@@ -107,7 +107,7 @@ if st.button('Ask Question'):
             st.write("No relevant documents found Using Cosine Similarity.")
         else:
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
-            st.write(len(retrieved_docs))
+            st.write(retrieved_docs)
             response = RAG().rag_generate(question, ' '.join(retrieved_docs), temperature)
             if "Answer:" in response:
                 # Split the text at "Answer:" and take the part after it

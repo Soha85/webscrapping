@@ -38,9 +38,12 @@ class RAG:
         # Convert chunk_embeddings to a NumPy array for efficient retrieval
         self.chunk_embeddings = np.vstack(self.chunk_embeddings)
         # Add embeddings to FAISS index
-        self.faiss_index = self.create_faiss_index(self.chunk_embeddings.shape[1])
-        self.faiss_index.add(self.chunk_embeddings)
-        return "Chunking & Embedding Done and Working on Retrieving Now........"
+        # Ensure faiss_index is initialized before adding embeddings
+        if self.faiss_index is None:
+            self.faiss_index = self.create_faiss_index(self.chunk_embeddings.shape)
+            self.faiss_index.add(self.chunk_embeddings)
+
+        return "**Chunking & Embedding Done and Working on Retrieving Now........**"
 
     def preprocess_text(self,text):
         text = text.lower()  # Convert to lowercase
@@ -83,14 +86,19 @@ class RAG:
         return results,scores
 
     def rag_generate(self,query,retrieved_docs,temperature):
-        llm = pipeline('text-generation', model='gpt2', batch_size=128)
-        #llm.model.config.pad_token_id = llm.model.config.eos_token_id
-        context =  ' '.join(retrieved_docs)
-        generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",
+        try:
+            llm = pipeline('text-generation', model='gpt2', batch_size=128)
+            llm.model.config.pad_token_id = llm.model.config.eos_token_id
+            context =  ' '.join(retrieved_docs)
+            generated = llm(f"Query: {query}\nContext: {context}\nAnswer:",
                         max_new_tokens=150,  # Limits the length of generated text
                         temperature=temperature,  # Adds a bit of randomness but not too much
                         num_return_sequences=1,  # Generate only one response
-         )
+            )
+
+
+        except Exception as e:
+            print(f"Error generating text: {e}")
         return generated
 
 
