@@ -97,7 +97,7 @@ if st.button('Ask Question'):
     if not st.session_state.articles_df.empty:
         st.write("**Processing articles and do Emdeddings...**")
         #time.sleep(2)  # Simulate processing time
-        answers=[]
+
         # Preparing Data
         st.write(RAG().prepare_data(chunk_size,overlap))
 
@@ -109,10 +109,7 @@ if st.button('Ask Question'):
             st.write("**Retrieving Done using Coisne Similarity and do Answer Generating...**")
             st.write(retrieved_docs)
             response = RAG().rag_generate(question, ' '.join(retrieved_docs), temperature)
-            if "Answer:" in response:
-                # Split the text at "Answer:" and take the part after it
-                answer = response.split("Answer:")[1].strip()
-                answers.append(answer)
+            st.write(f"Cosine Retrieval:{response}")
 
         retrieved_docs, _ = RAG().retrieve_documents_faiss(question, num_answers)
         if not retrieved_docs:
@@ -121,14 +118,9 @@ if st.button('Ask Question'):
             st.write("**Retrieving Done using Faiss Index and do Answer Generating...**")
             st.write(len(retrieved_docs))
             response = RAG().rag_generate(question, ' '.join(retrieved_docs), temperature)
-            if "Answer:" in response:
-                # Split the text at "Answer:" and take the part after it
-                answer = response.split("Answer:")[1].strip()
-                answers.append(answer)
+            st.write(f"Faiss Retrieval:{response}")
 
 
-        for i, ans in enumerate(answers, 1):
-            st.write(f"Both Similarities using Cosine and Faiss \n Generated Answer {i}: {ans}")
 
     else:
         st.error("No articles available for processing.")
