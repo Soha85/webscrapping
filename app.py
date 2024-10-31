@@ -60,100 +60,106 @@ if "articles_df" not in st.session_state:
 # Initialize previous_website in session state
 if "previous_website" not in st.session_state:
     st.session_state.previous_website = None
-# Dropdown to select website
-selected_website = st.selectbox("Select a website to scrape", ['https://www.bbc.com/travel', 'https://www.bbc.com/culture'])
 
-# Button to get articles
-if st.button('Get Articles'):
-    article_links = []
-    titles = []
-    articles = []
+# Split the down part into three vertical columns
+col1, col2 = st.columns(2)
 
-    try:
-        response = requests.get(selected_website, timeout=10)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
+with col1:
 
-        for link in soup.find_all('a', href=True):
-            href = link['href']
-            if '/article/' in href:
-                full_url = 'https://www.bbc.com' + href
-                article_links.append(full_url)
+    # Dropdown to select website
+    selected_website = st.selectbox("Select a website to scrape", ['https://www.bbc.com/travel', 'https://www.bbc.com/culture'])
+    chunk_size = st.number_input("Chunk Size", min_value=10, max_value=500, value=50, step=50)
+    overlap = st.number_input("Overlap Size", min_value=10, max_value=500, value=50, step=10)
 
-        article_links = list(set(article_links))  # Remove duplicates
+    # Button to get articles
+    if st.button('Get Articles'):
+        article_links = []
+        titles = []
+        articles = []
 
-        for article in article_links:
-            title, content = scrape_articles(article)
-            if title and content:
-                titles.append(title)
-                articles.append(content)
+        try:
+            response = requests.get(selected_website, timeout=10)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.content, 'html.parser')
 
-        if articles:
-            # Display articles in a table
-            RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
+            for link in soup.find_all('a', href=True):
+                href = link['href']
+                if '/article/' in href:
+                    full_url = 'https://www.bbc.com' + href
+                    article_links.append(full_url)
+
+            article_links = list(set(article_links))  # Remove duplicates
+
+            for article in article_links:
+                title, content = scrape_articles(article)
+                if title and content:
+                    titles.append(title)
+                    articles.append(content)
+
+            if articles:
+                # Display articles in a table
+                RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
 
 
-        st.session_state.articles_df = RAG.articles
-        st.success("Articles successfully scraped!")
-    except requests.exceptions.RequestException as e:
-        st.error(f"Failed to fetch articles: {e}")
+            st.session_state.articles_df = RAG.articles
+            st.success("Articles successfully scraped!")
+        except requests.exceptions.RequestException as e:
+            st.error(f"Failed to fetch articles: {e}")
 
 # Display articles in a table (if any)
 if not st.session_state.articles_df.empty:
     st.write(st.session_state.articles_df)
+    st.write("**Processing articles, Start Chunking and Emdeddings...**")
+    # Preparing Data
+    rag_instance = RAG()
+    st.write(rag_instance.prepare_data(chunk_size, overlap))
 else:
     st.info("No articles scraped yet.")
+with col2:
+    # Input for user question
+    question = st.text_input("Ask a question:")
+    num_answers = st.number_input("Number of Retrievals", min_value=1, max_value=5, value=3, step=1)
+    temperature = st.slider("Temperature", min_value=0.0, max_value=1.5, value=0.7, step=0.1)
+    models_list = ['gpt2','EleutherAI/gpt-neo-2.7B','EleutherAI/gpt-j-6B','EleutherAI/gpt-neox-20b','t5-large','bigscience/bloom-3b','facebook/opt-6.7b','google/flan-t5-large','meta-llama/LLaMA-7b-hf']
+    selected_model=st.selectbox("Select a model:",models_list)
 
-# Input for user question
-question = st.text_input("Ask a question:")
-chunk_size = st.number_input("Chunk Size", min_value=10, max_value=500, value=50, step=50)
-overlap = st.number_input("Overlap Size", min_value=10, max_value=500, value=50, step=10)
-num_answers = st.number_input("Number of Retrievals", min_value=1, max_value=5, value=3, step=1)
-temperature = st.slider("Temperature", min_value=0.0, max_value=1.5, value=0.7, step=0.1)
-models_list = ['gpt2','EleutherAI/gpt-neo-2.7B','EleutherAI/gpt-j-6B','EleutherAI/gpt-neox-20b','t5-large','bigscience/bloom-3b','facebook/opt-6.7b','google/flan-t5-large','meta-llama/LLaMA-7b-hf']
-selected_model=st.selectbox("Select a model:",models_list)
-
-def call_RAG_generate(question, context, temperature):
-    st.write("**Retrieving Done, Start Answer Generating...**")
-    st.write(f"**Retrieval scores:**{scores}")
-    ans = rag_generate(question, context, temperature)
-    st.write(f"Retrieval Answer:{ans}")
-    st.write(f"Evaluation:{evaluate_rouge(ans, context)}")
+    def call_RAG_generate(question, context, temperature):
+        st.write("**Retrieving Done, Start Answer Generating...**")
+        st.write(f"**Retrieval scores:**{scores}")
+        ans = rag_generate(question, context, temperature)
+        st.write(f"Retrieval Answer:{ans}")
+        st.write(f"Evaluation:{evaluate_rouge(ans, context)}")
 
 
-# Button to send the question for processing
-if st.button('Ask Question'):
-    if not st.session_state.articles_df.empty:
-        st.write("**Processing articles, Start Chunking and Emdeddings...**")
-        #time.sleep(2)  # Simulate processing time
-        # Preparing Data
-        rag_instance = RAG()
-        st.write(rag_instance.prepare_data(chunk_size,overlap))
-        try:
-            #retrieving using Cosine
-            st.write("**Retrieving using Cosine Similarity.....**")
-            retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
-            context = ' '.join(retrieved_docs)
-            if not retrieved_docs:
-                st.write("No relevant documents found Using Cosine Similarity.")
-            else:
-                call_RAG_generate(question,context, temperature)
-        except Exception as e:
-            st.write(f"Error in Retrieving COSINE: {e}")
+    # Button to send the question for processing
+    if st.button('Ask Question'):
+        if not st.session_state.articles_df.empty:
 
-        try:
-            #retrieving using Fais
-            st.write("**Retrieving using Faiss Similarity.....**")
-            retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
-            context = ' '.join(retrieved_docs)
-            if not retrieved_docs:
-                st.write("No relevant documents found Using Faiss indexing.")
-            else:
-                call_RAG_generate(question,context, temperature)
-        except Exception as e:
-            st.write(f"Error in Retrieving FAISS: {e}")
-    else:
-        st.error("No articles available for processing.")
+            try:
+                #retrieving using Cosine
+                st.write("**Retrieving using Cosine Similarity.....**")
+                retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
+                context = ' '.join(retrieved_docs)
+                if not retrieved_docs:
+                    st.write("No relevant documents found Using Cosine Similarity.")
+                else:
+                    call_RAG_generate(question,context, temperature)
+            except Exception as e:
+                st.write(f"Error in Retrieving COSINE: {e}")
+
+            try:
+                #retrieving using Fais
+                st.write("**Retrieving using Faiss Similarity.....**")
+                retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
+                context = ' '.join(retrieved_docs)
+                if not retrieved_docs:
+                    st.write("No relevant documents found Using Faiss indexing.")
+                else:
+                    call_RAG_generate(question,context, temperature)
+            except Exception as e:
+                st.write(f"Error in Retrieving FAISS: {e}")
+        else:
+            st.error("No articles available for processing.")
 
 
 
