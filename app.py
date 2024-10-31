@@ -50,6 +50,13 @@ def rag_generate(query,context,temperature):
     except Exception as e:
         st.write(f"Error generating text: {e}")
         return None
+def call_RAG_generate(question, context, temperature):
+    st.write("**Retrieving Done, Start Answer Generating...**")
+    st.write(f"**Retrieval scores:**{scores}")
+    ans = rag_generate(question, context, temperature)
+    st.write(f"Retrieval Answer:{ans}")
+    st.write(f"Evaluation:{evaluate_rouge(ans, context)}")
+
 
 # Streamlit UI
 st.title("Web Scraping to QA: A RAG-Based Approach")
@@ -60,7 +67,6 @@ if "articles_df" not in st.session_state:
 # Initialize previous_website in session state
 if "previous_website" not in st.session_state:
     st.session_state.previous_website = None
-rag_instance = None
 # Split the down part into three vertical columns
 col1, col2 = st.columns(2)
 
@@ -104,7 +110,6 @@ with col1:
             rag_instance = RAG()
             st.write(rag_instance.prepare_data(chunk_size, overlap))
 
-
             st.session_state.articles_df = RAG.articles
             st.success("Articles successfully scraped!")
         except requests.exceptions.RequestException as e:
@@ -123,13 +128,6 @@ with col2:
     models_list = ['gpt2','EleutherAI/gpt-neo-2.7B','EleutherAI/gpt-j-6B','EleutherAI/gpt-neox-20b','t5-large','bigscience/bloom-3b','facebook/opt-6.7b','google/flan-t5-large','meta-llama/LLaMA-7b-hf']
     selected_model=st.selectbox("Select a model:",models_list)
 
-    def call_RAG_generate(question, context, temperature):
-        st.write("**Retrieving Done, Start Answer Generating...**")
-        st.write(f"**Retrieval scores:**{scores}")
-        ans = rag_generate(question, context, temperature)
-        st.write(f"Retrieval Answer:{ans}")
-        st.write(f"Evaluation:{evaluate_rouge(ans, context)}")
-
 
     # Button to send the question for processing
     if st.button('Ask Question'):
@@ -138,7 +136,7 @@ with col2:
             try:
                 #retrieving using Cosine
                 st.write("**Retrieving using Cosine Similarity.....**")
-                retrieved_docs, scores = rag_instance.retrieve_documents_cosine(question, num_answers)
+                retrieved_docs, scores = RAG().retrieve_documents_cosine(question, num_answers)
                 context = ' '.join(retrieved_docs)
                 if not retrieved_docs:
                     st.write("No relevant documents found Using Cosine Similarity.")
@@ -150,7 +148,7 @@ with col2:
             try:
                 #retrieving using Fais
                 st.write("**Retrieving using Faiss Similarity.....**")
-                retrieved_docs, scores = rag_instance.retrieve_documents_faiss(question, num_answers)
+                retrieved_docs, scores = RAG().retrieve_documents_faiss(question, num_answers)
                 context = ' '.join(retrieved_docs)
                 if not retrieved_docs:
                     st.write("No relevant documents found Using Faiss indexing.")
