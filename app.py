@@ -9,7 +9,7 @@ import rouge
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 st.session_state.articles_df = RAG.articles
-
+st.set_page_config(layout="wide")
 
 def evaluate_rouge(answer,reference):
     if answer:
