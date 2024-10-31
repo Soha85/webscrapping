@@ -60,7 +60,7 @@ if "articles_df" not in st.session_state:
 # Initialize previous_website in session state
 if "previous_website" not in st.session_state:
     st.session_state.previous_website = None
-
+rag_instance = None
 # Split the down part into three vertical columns
 col1, col2 = st.columns(2)
 
@@ -133,7 +133,7 @@ with col2:
 
     # Button to send the question for processing
     if st.button('Ask Question'):
-        if not st.session_state.articles_df.empty:
+        if not st.session_state.articles_df.empty and not rag_instance:
 
             try:
                 #retrieving using Cosine
