@@ -99,10 +99,10 @@ with col1:
             if articles:
                 # Display articles in a table
                 RAG.articles = pd.DataFrame({'title': titles, 'content': articles})
-                st.write("**Processing articles, Start Chunking and Emdeddings...**")
-                # Preparing Data
-                rag_instance = RAG()
-                st.write(rag_instance.prepare_data(chunk_size, overlap))
+            st.write("**Processing articles, Start Chunking and Emdeddings...**")
+            # Preparing Data
+            rag_instance = RAG()
+            st.write(rag_instance.prepare_data(chunk_size, overlap))
 
 
             st.session_state.articles_df = RAG.articles
