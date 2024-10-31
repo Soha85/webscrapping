@@ -106,15 +106,15 @@ with col1:
         except requests.exceptions.RequestException as e:
             st.error(f"Failed to fetch articles: {e}")
 
-# Display articles in a table (if any)
-if not st.session_state.articles_df.empty:
-    st.write(st.session_state.articles_df)
-    st.write("**Processing articles, Start Chunking and Emdeddings...**")
-    # Preparing Data
-    rag_instance = RAG()
-    st.write(rag_instance.prepare_data(chunk_size, overlap))
-else:
-    st.info("No articles scraped yet.")
+    # Display articles in a table (if any)
+    if not st.session_state.articles_df.empty:
+        st.write(st.session_state.articles_df)
+        st.write("**Processing articles, Start Chunking and Emdeddings...**")
+        # Preparing Data
+        rag_instance = RAG()
+        st.write(rag_instance.prepare_data(chunk_size, overlap))
+    else:
+        st.info("No articles scraped yet.")
 with col2:
     # Input for user question
     question = st.text_input("Ask a question:")
