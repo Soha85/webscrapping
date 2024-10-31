@@ -131,7 +131,7 @@ with col2:
 
     # Button to send the question for processing
     if st.button('Ask Question'):
-        if not st.session_state.articles_df.empty and not rag_instance:
+        if not st.session_state.articles_df.empty:
 
             try:
                 #retrieving using Cosine
