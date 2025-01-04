@@ -45,7 +45,7 @@ def rag_generate(query,context,temperature):
     try:
         articles_llm = pipeline(task='text-generation', model=selected_model)
         articles_llm.model.config.pad_token_id = articles_llm.model.config.eos_token_id
-        generated = articles_llm(f"Answer this Query: {query}\n based on that Context: {context}\nAnswer:",max_new_tokens=150,temperature=temperature,num_return_sequences=1)
+        generated = articles_llm(f"Query: {query}\nContext: {context}\nAnswer:",max_new_tokens=150,temperature=temperature,num_return_sequences=1)
         return generated[0]['generated_text'].split('Answer:')[1]
 
     except Exception as e:
